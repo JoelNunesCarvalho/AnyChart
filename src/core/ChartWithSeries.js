@@ -1203,7 +1203,6 @@ anychart.core.ChartWithSeries.prototype.onLegendSignal = function(e) {
 
 /** @inheritDoc */
 anychart.core.ChartWithSeries.prototype.onTitleSignal = function(event) {
-  console.log('signal');
   anychart.core.ChartWithSeries.base(this, 'onTitleSignal', event);
   if (event.hasSignal(anychart.Signal.BOUNDS_CHANGED)) {
     this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA, anychart.Signal.BOUNDS_CHANGED);
