@@ -1194,10 +1194,20 @@ anychart.core.ChartWithSeries.prototype.resizeHandler = function(e) {
 
 /** @inheritDoc */
 anychart.core.ChartWithSeries.prototype.onLegendSignal = function(e) {
-  this.suspendSignalsDispatching();
   anychart.core.ChartWithSeries.base(this, 'onLegendSignal', e);
-  this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA, anychart.Signal.BOUNDS_CHANGED);
-  this.resumeSignalsDispatching(true);
+  if (e.hasSignal(anychart.Signal.BOUNDS_CHANGED)) {
+    this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA, anychart.Signal.BOUNDS_CHANGED);
+  }
+};
+
+
+/** @inheritDoc */
+anychart.core.ChartWithSeries.prototype.onTitleSignal = function(event) {
+  console.log('signal');
+  anychart.core.ChartWithSeries.base(this, 'onTitleSignal', event);
+  if (event.hasSignal(anychart.Signal.BOUNDS_CHANGED)) {
+    this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA, anychart.Signal.BOUNDS_CHANGED);
+  }
 };
 
 
