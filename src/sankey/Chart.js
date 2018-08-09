@@ -533,7 +533,6 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
   var tag = domTarget.tag;
   var state, context;
   var fill, stroke;
-  var tooltip = this.tooltip();
 
   if (tag) {
     var type = tag.type;
@@ -546,6 +545,8 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
       stroke = this.node_.getStroke(state, context);
       domTarget.fill(fill);
       domTarget.stroke(stroke);
+
+      this.node_.tooltip().showFloat(event['clientX'], event['clientY'], this.createContextProvider(tag));
 
       var flows = goog.array.concat(tag.node.incomeFlows, tag.node.outcomeFlows);
       for (var i = 0; i < flows.length; i++) {
@@ -578,9 +579,6 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
     } else {
       // dropoff flow
     }
-    tooltip.suspendSignalsDispatching();
-    tooltip.showFloat(event['clientX'], event['clientY'], this.createContextProvider(tag));
-    tooltip.resumeSignalsDispatching(true);
   }
 };
 
@@ -728,7 +726,7 @@ anychart.sankeyModule.Chart.prototype.flow = function(opt_value) {
  */
 anychart.sankeyModule.Chart.prototype.node = function(opt_value) {
   if (!this.node_) {
-    this.node_ = new anychart.sankeyModule.elements.Node();
+    this.node_ = new anychart.sankeyModule.elements.Node(this);
     this.node_.listenSignals(this.elementInvalidated_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -1314,6 +1312,12 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 anychart.sankeyModule.Chart.prototype.serialize = function() {
   var json = anychart.sankeyModule.Chart.base(this, 'serialize');
   anychart.core.settings.serialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, json);
+
+  json['conflict'] = this.conflict().serialize();
+  json['dropoff'] = this.dropoff().serialize();
+  json['flow'] = this.flow().serialize();
+  json['node'] = this.node().serialize();
+
   return json;
 };
 
@@ -1352,6 +1356,9 @@ anychart.sankeyModule.Chart.prototype.disposeInternal = function() {
   proto['dropoff'] = proto.dropoff;
   proto['flow'] = proto.flow;
   proto['node'] = proto.node;
+  // palettes
+  proto['palette'] = proto.palette;
+  proto['hatchFillPalette'] = proto.hatchFillPalette;
   // auto generated
   // proto['nodePadding'] = proto.nodePadding;
   // proto['nodeWidth'] = proto.nodeWidth;

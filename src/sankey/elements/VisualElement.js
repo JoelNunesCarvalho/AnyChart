@@ -9,12 +9,17 @@ goog.require('anychart.core.settings');
 /**
  * Sankey visual element base settings.
  * @constructor
- * @param {anychart.sankeyModule.Chart} chart Sankey chart.
  * @extends {anychart.core.Base}
  * @implements {anychart.core.settings.IObjectWithSettings}
  */
 anychart.sankeyModule.elements.VisualElement = function(chart) {
   anychart.sankeyModule.elements.VisualElement.base(this, 'constructor');
+
+  /**
+   * @type {anychart.core.ui.Tooltip}
+   * @private
+   */
+  this.tooltip_ = null;
 
   this.chart = chart;
 
@@ -40,6 +45,52 @@ anychart.core.settings.populateAliases(anychart.sankeyModule.elements.VisualElem
 anychart.sankeyModule.elements.VisualElement.prototype.SUPPORTED_SIGNALS =
     anychart.core.Base.prototype.SUPPORTED_SIGNALS |
     anychart.Signal.NEEDS_REDRAW_APPEARANCE;
+
+
+/**
+ * Getter for tooltip settings.
+ * @param {(Object|boolean|null)=} opt_value - Tooltip settings.
+ * @return {!(anychart.sankeyModule.elements.VisualElement|anychart.core.ui.Tooltip)} - Tooltip instance or self for method chaining.
+ */
+anychart.sankeyModule.elements.VisualElement.prototype.tooltip = function(opt_value) {
+  if (!this.tooltip_) {
+    this.tooltip_ = new anychart.core.ui.Tooltip(0);
+    this.tooltip_.parent(this.chart.tooltip());
+    this.tooltip_.listenSignals(this.onTooltipSignal_, this);
+  }
+  if (goog.isDef(opt_value)) {
+    this.tooltip_.setup(opt_value);
+    return this;
+  } else {
+    return this.tooltip_;
+  }
+};
+
+
+/**
+ * Tooltip invalidation handler.
+ * @param {anychart.SignalEvent} event - Event object.
+ * @private
+ */
+anychart.sankeyModule.elements.VisualElement.prototype.onTooltipSignal_ = function(event) {
+  this.dispatchSignal(anychart.Signal.NEEDS_UPDATE_TOOLTIP);
+};
+
+
+/**
+ * Gets tooltip config. Includes formatter-functions.
+ * @return {Object}
+ */
+anychart.sankeyModule.elements.VisualElement.prototype.getCurrentTooltipConfig = function() {
+  var config = this.tooltip().serialize();
+  var titleFormat = this.tooltip().getOption('titleFormat');
+  var format = this.tooltip().getOption('format');
+  if (titleFormat && titleFormat != anychart.utils.DEFAULT_FORMATTER)
+    config['titleFormat'] = titleFormat;
+  if (format && format != anychart.utils.DEFAULT_FORMATTER)
+    config['format'] = format;
+  return config;
+};
 
 
 /**
@@ -152,6 +203,9 @@ anychart.sankeyModule.elements.VisualElement.prototype.resolveColor = function(n
 /** @inheritDoc */
 anychart.sankeyModule.elements.VisualElement.prototype.serialize = function() {
   var json = anychart.sankeyModule.elements.VisualElement.base(this, 'serialize');
+
+  json['tooltip'] = this.tooltip().serialize();
+
   json['normal'] = this.normal_.serialize();
   json['hovered'] = this.hovered_.serialize();
   json['selected'] = this.selected_.serialize();
@@ -163,6 +217,8 @@ anychart.sankeyModule.elements.VisualElement.prototype.serialize = function() {
 /** @inheritDoc */
 anychart.sankeyModule.elements.VisualElement.prototype.setupByJSON = function(config, opt_default) {
   anychart.sankeyModule.elements.VisualElement.base(this, 'setupByJSON', config, opt_default);
+  if ('tooltip' in config)
+    this.tooltip().setupInternal(!!opt_default, config['tooltip']);
 
   this.normal_.setupInternal(!!opt_default, config);
   this.normal_.setupInternal(!!opt_default, config['normal']);
@@ -173,7 +229,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.setupByJSON = function(co
 
 /** @inheritDoc */
 anychart.sankeyModule.elements.VisualElement.prototype.disposeInternal = function() {
-  goog.disposeAll(this.normal_, this.hovered_, this.selected_);
+  goog.disposeAll(this.tooltip_, this.normal_, this.hovered_, this.selected_);
   anychart.sankeyModule.elements.VisualElement.base(this, 'disposeInternal');
 };
 
