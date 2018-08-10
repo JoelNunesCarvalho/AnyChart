@@ -387,9 +387,8 @@ goog.addDependency('../../../../src/resource/resourcelist/Item.js', ['anychart.r
 goog.addDependency('../../../../src/resource/resourcelist/Settings.js', ['anychart.resourceModule.resourceList.Settings'], ['anychart.core.Base', 'anychart.core.utils.Margin'], {});
 goog.addDependency('../../../../src/resource/resourcelist/TagsSettings.js', ['anychart.resourceModule.resourceList.TagsSettings'], ['anychart.core.ui.Background', 'anychart.core.utils.Padding', 'anychart.resourceModule.resourceList.TextSettings'], {});
 goog.addDependency('../../../../src/resource/resourcelist/TextSettings.js', ['anychart.resourceModule.resourceList.TextSettings'], ['anychart.core.settings', 'anychart.resourceModule.resourceList.Settings'], {});
-goog.addDependency('../../../../src/sankey/Chart.js', ['anychart.sankeyModule.Chart'], ['anychart.core.SeparateChart', 'anychart.core.StateSettings', 'anychart.data.Set', 'anychart.sankeyModule.elements.Conflict', 'anychart.sankeyModule.elements.Dropoff', 'anychart.sankeyModule.elements.Flow', 'anychart.sankeyModule.elements.Node'], {});
+goog.addDependency('../../../../src/sankey/Chart.js', ['anychart.sankeyModule.Chart'], ['anychart.core.SeparateChart', 'anychart.core.StateSettings', 'anychart.data.Set', 'anychart.sankeyModule.elements.Dropoff', 'anychart.sankeyModule.elements.Flow', 'anychart.sankeyModule.elements.Node'], {});
 goog.addDependency('../../../../src/sankey/defaultTheme.js', ['anychart.sankeyModule.defaultTheme'], [], {});
-goog.addDependency('../../../../src/sankey/elements/Conflict.js', ['anychart.sankeyModule.elements.Conflict'], ['anychart.sankeyModule.elements.VisualElement'], {});
 goog.addDependency('../../../../src/sankey/elements/Dropoff.js', ['anychart.sankeyModule.elements.Dropoff'], ['anychart.sankeyModule.elements.VisualElement'], {});
 goog.addDependency('../../../../src/sankey/elements/Flow.js', ['anychart.sankeyModule.elements.Flow'], ['anychart.sankeyModule.elements.VisualElement'], {});
 goog.addDependency('../../../../src/sankey/elements/Node.js', ['anychart.sankeyModule.elements.Node'], ['anychart.sankeyModule.elements.VisualElement'], {});

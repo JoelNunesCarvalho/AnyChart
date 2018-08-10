@@ -3,7 +3,6 @@ goog.provide('anychart.sankeyModule.Chart');
 goog.require('anychart.core.SeparateChart');
 goog.require('anychart.core.StateSettings');
 goog.require('anychart.data.Set');
-goog.require('anychart.sankeyModule.elements.Conflict');
 goog.require('anychart.sankeyModule.elements.Dropoff');
 goog.require('anychart.sankeyModule.elements.Flow');
 goog.require('anychart.sankeyModule.elements.Node');
@@ -477,15 +476,6 @@ anychart.sankeyModule.Chart.prototype.getAllSeries = function() {
 };
 
 
-/** @inheritDoc */
-anychart.sankeyModule.Chart.prototype.createTooltip = function() {
-  var tooltip = this.tooltip_ = new anychart.core.ui.Tooltip(0);
-  tooltip.chart(this);
-  tooltip.listenSignals(this.onTooltipSignal_, this);
-  return tooltip;
-};
-
-
 /**
  * Tooltip invalidation handler.
  * @param {anychart.SignalEvent} event - Event object.
@@ -533,20 +523,22 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
   var tag = domTarget.tag;
   var state, context;
   var fill, stroke;
+  var tooltip;
 
   if (tag) {
     var type = tag.type;
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
       // node and conflict node
-      state = tag.isSelected ? anychart.PointState.SELECT : anychart.PointState.HOVER;
+      state = anychart.PointState.HOVER;
       context = this.getColorResolutionContext(tag);
+
       fill = this.node_.getFill(state, context);
       stroke = this.node_.getStroke(state, context);
       domTarget.fill(fill);
       domTarget.stroke(stroke);
 
-      this.node_.tooltip().showFloat(event['clientX'], event['clientY'], this.createContextProvider(tag));
+      tooltip = this.node_.tooltip();
 
       var flows = goog.array.concat(tag.node.incomeFlows, tag.node.outcomeFlows);
       for (var i = 0; i < flows.length; i++) {
@@ -560,6 +552,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
     } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) {
       // flow
       state = tag.isSelected ? anychart.PointState.SELECT : anychart.PointState.HOVER;
+      tooltip = this.flow_.tooltip();
       context = this.getColorResolutionContext(tag);
       fill = this.flow_.getFill(state, context);
       stroke = this.flow_.getStroke(state, context);
@@ -577,8 +570,10 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
       stroke = this.node_.getStroke(state, context);
       flow.to.path.fill(fill).stroke(stroke);
     } else {
+      tooltip = this.flow_.tooltip();
       // dropoff flow
     }
+    tooltip.showFloat(event['clientX'], event['clientY'], this.createContextProvider(tag));
   }
 };
 
@@ -595,7 +590,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
       // node and conflict node
-      state = tag.isSelected ? anychart.PointState.SELECT : anychart.PointState.NORMAL;
+      state = anychart.PointState.NORMAL;
       context = this.getColorResolutionContext(tag);
       fill = this.node_.getFill(state, context);
       stroke = this.node_.getStroke(state, context);
@@ -648,11 +643,6 @@ anychart.sankeyModule.Chart.prototype.handleMouseClick_ = function(event) {
 };
 
 
-anychart.sankeyModule.Chart.prototype.makeInteractivityEvent_ = function(event) {
-
-};
-
-
 //endregion
 //region Element Settings
 /**
@@ -668,29 +658,11 @@ anychart.sankeyModule.Chart.prototype.elementInvalidated_ = function(event) {
 /**
  * TODO: add docs
  * @param {Object=} opt_value
- * @return {anychart.sankeyModule.elements.Conflict|anychart.sankeyModule.Chart}
- */
-anychart.sankeyModule.Chart.prototype.conflict = function(opt_value) {
-  if (!this.conflict_) {
-    this.conflict_ = new anychart.sankeyModule.elements.Conflict();
-    this.conflict_.listenSignals(this.elementInvalidated_, this);
-  }
-  if (goog.isDef(opt_value)) {
-    this.conflict_.setup(opt_value);
-    return this;
-  }
-  return this.conflict_;
-};
-
-
-/**
- * TODO: add docs
- * @param {Object=} opt_value
  * @return {anychart.sankeyModule.elements.Dropoff|anychart.sankeyModule.Chart}
  */
 anychart.sankeyModule.Chart.prototype.dropoff = function(opt_value) {
   if (!this.dropoff_) {
-    this.dropoff_ = new anychart.sankeyModule.elements.Dropoff();
+    this.dropoff_ = new anychart.sankeyModule.elements.Dropoff(this);
     this.dropoff_.listenSignals(this.elementInvalidated_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -708,7 +680,7 @@ anychart.sankeyModule.Chart.prototype.dropoff = function(opt_value) {
  */
 anychart.sankeyModule.Chart.prototype.flow = function(opt_value) {
   if (!this.flow_) {
-    this.flow_ = new anychart.sankeyModule.elements.Flow();
+    this.flow_ = new anychart.sankeyModule.elements.Flow(this);
     this.flow_.listenSignals(this.elementInvalidated_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -784,28 +756,6 @@ anychart.sankeyModule.Chart.prototype.setupPalette_ = function(cls, opt_cloneFro
     this.palette_.listenSignals(this.paletteInvalidated_, this);
     if (doDispatch)
       this.invalidate(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.CHART_LEGEND, anychart.Signal.NEEDS_REDRAW);
-  }
-};
-
-
-/**
- * Chart hatch fill palette settings.
- * @param {(Array.<acgraph.vector.HatchFill.HatchFillType>|Object|anychart.palettes.HatchFills)=} opt_value Chart
- * hatch fill palette settings to set.
- * @return {!(anychart.palettes.HatchFills|anychart.sankeyModule.Chart)} Return current chart hatch fill palette or itself
- * for chaining call.
- */
-anychart.sankeyModule.Chart.prototype.hatchFillPalette = function(opt_value) {
-  if (!this.hatchFillPalette_) {
-    this.hatchFillPalette_ = new anychart.palettes.HatchFills();
-    this.hatchFillPalette_.listenSignals(this.paletteInvalidated_, this);
-  }
-
-  if (goog.isDef(opt_value)) {
-    this.hatchFillPalette_.setup(opt_value);
-    return this;
-  } else {
-    return this.hatchFillPalette_;
   }
 };
 
@@ -917,7 +867,8 @@ anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag, 
     return {
       'id': node.id,
       'name': node.name,
-      'sourceColor': palette.itemAt(node.id)
+      'sourceColor': palette.itemAt(node.id),
+      'conflict': node.conflict
     };
   } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) { // flow
     var flow = tag.flow;
@@ -1295,8 +1246,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     for (i = 0; i < this.conflictPaths.length; i++) {
       path = this.conflictPaths[i];
       context = this.getColorResolutionContext(path.tag);
-      fill = this.conflict_.getFill(0, context);
-      stroke = this.conflict_.getStroke(0, context);
+      fill = this.node_.getFill(0, context);
+      stroke = this.node_.getStroke(0, context);
       path.fill(fill);
       path.stroke(stroke);
     }
@@ -1313,7 +1264,6 @@ anychart.sankeyModule.Chart.prototype.serialize = function() {
   var json = anychart.sankeyModule.Chart.base(this, 'serialize');
   anychart.core.settings.serialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, json);
 
-  json['conflict'] = this.conflict().serialize();
   json['dropoff'] = this.dropoff().serialize();
   json['flow'] = this.flow().serialize();
   json['node'] = this.node().serialize();
@@ -1327,8 +1277,6 @@ anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default
   anychart.sankeyModule.Chart.base(this, 'setupByJSON', config, opt_default);
   anychart.core.settings.deserialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, config, opt_default);
 
-  if ('conflict' in config)
-    this.conflict().setupInternal(!!opt_default, config['conflict']);
   if ('dropoff' in config)
     this.dropoff().setupInternal(!!opt_default, config['dropoff']);
   if ('flow' in config)
@@ -1340,7 +1288,7 @@ anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default
 
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.disposeInternal = function() {
-  goog.disposeAll(this.palette_, this.hatchFillPalette_, this.conflict_, this.dropoff_, this.flow_, this.node_, this.tooltip_);
+  goog.disposeAll(this.palette_, this.dropoff_, this.flow_, this.node_, this.tooltip_);
   anychart.sankeyModule.Chart.base(this, 'disposeInternal');
 };
 
@@ -1351,14 +1299,13 @@ anychart.sankeyModule.Chart.prototype.disposeInternal = function() {
 (function() {
   var proto = anychart.sankeyModule.Chart.prototype;
   proto['data'] = proto.data;
+  proto['tooltip'] = proto.tooltip;
   // elements settings
-  proto['conflict'] = proto.conflict;
   proto['dropoff'] = proto.dropoff;
   proto['flow'] = proto.flow;
   proto['node'] = proto.node;
   // palettes
   proto['palette'] = proto.palette;
-  proto['hatchFillPalette'] = proto.hatchFillPalette;
   // auto generated
   // proto['nodePadding'] = proto.nodePadding;
   // proto['nodeWidth'] = proto.nodeWidth;

@@ -10,6 +10,7 @@ goog.require('anychart.core.settings');
  * Sankey visual element base settings.
  * @constructor
  * @extends {anychart.core.Base}
+ * @param {anychart.sankeyModule.Chart} chart
  * @implements {anychart.core.settings.IObjectWithSettings}
  */
 anychart.sankeyModule.elements.VisualElement = function(chart) {
@@ -27,15 +28,14 @@ anychart.sankeyModule.elements.VisualElement = function(chart) {
   anychart.core.settings.createDescriptorsMeta(descriptorsMap, [
     ['fill', 0, anychart.Signal.NEEDS_REDRAW_APPEARANCE],
     ['stroke', 0, anychart.Signal.NEEDS_REDRAW_APPEARANCE],
-    ['hatchFill', 0, anychart.Signal.NEEDS_REDRAW_APPEARANCE]
+    ['labels', 0, 0]
   ]);
 
   this.normal_ = new anychart.core.StateSettings(this, descriptorsMap, anychart.PointState.NORMAL);
   this.hovered_ = new anychart.core.StateSettings(this, descriptorsMap, anychart.PointState.HOVER);
-  this.selected_ = new anychart.core.StateSettings(this, descriptorsMap, anychart.PointState.SELECT);
 };
 goog.inherits(anychart.sankeyModule.elements.VisualElement, anychart.core.Base);
-anychart.core.settings.populateAliases(anychart.sankeyModule.elements.VisualElement, ['fill', 'stroke', 'hatchFill'/*, 'labels'*/], 'normal');
+anychart.core.settings.populateAliases(anychart.sankeyModule.elements.VisualElement, ['fill', 'stroke', 'labels'], 'normal');
 
 
 /**
@@ -56,7 +56,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.tooltip = function(opt_va
   if (!this.tooltip_) {
     this.tooltip_ = new anychart.core.ui.Tooltip(0);
     this.tooltip_.parent(this.chart.tooltip());
-    this.tooltip_.listenSignals(this.onTooltipSignal_, this);
+    this.tooltip_.chart(this.chart);
   }
   if (goog.isDef(opt_value)) {
     this.tooltip_.setup(opt_value);
@@ -74,22 +74,6 @@ anychart.sankeyModule.elements.VisualElement.prototype.tooltip = function(opt_va
  */
 anychart.sankeyModule.elements.VisualElement.prototype.onTooltipSignal_ = function(event) {
   this.dispatchSignal(anychart.Signal.NEEDS_UPDATE_TOOLTIP);
-};
-
-
-/**
- * Gets tooltip config. Includes formatter-functions.
- * @return {Object}
- */
-anychart.sankeyModule.elements.VisualElement.prototype.getCurrentTooltipConfig = function() {
-  var config = this.tooltip().serialize();
-  var titleFormat = this.tooltip().getOption('titleFormat');
-  var format = this.tooltip().getOption('format');
-  if (titleFormat && titleFormat != anychart.utils.DEFAULT_FORMATTER)
-    config['titleFormat'] = titleFormat;
-  if (format && format != anychart.utils.DEFAULT_FORMATTER)
-    config['format'] = format;
-  return config;
 };
 
 
@@ -122,20 +106,6 @@ anychart.sankeyModule.elements.VisualElement.prototype.hovered = function(opt_va
 
 
 /**
- * Selected state settings.
- * @param {!Object=} opt_value
- * @return {anychart.core.StateSettings|anychart.sankeyModule.elements.VisualElement}
- */
-anychart.sankeyModule.elements.VisualElement.prototype.selected = function(opt_value) {
-  if (goog.isDef(opt_value)) {
-    this.selected_.setup(opt_value);
-    return this;
-  }
-  return this.selected_;
-};
-
-
-/**
  * Returns fill for the element.
  * @param {anychart.PointState|number} state
  * @param {Object} context
@@ -158,26 +128,6 @@ anychart.sankeyModule.elements.VisualElement.prototype.getStroke = function(stat
 
 
 /**
- * Returns hatchFill for the element.
- * @param {anychart.PointState|number} state
- * @param {Object} context
- * @return {acgraph.vector.Fill|acgraph.vector.Stroke}
- */
-anychart.sankeyModule.elements.VisualElement.prototype.getHatchFill = function(state, context) {
-  return this.resolveColor('hatchFill', state, context);
-};
-
-
-/**
- * Returns auto hatch fill.
- * @return {acgraph.vector.HatchFill}
- */
-anychart.sankeyModule.elements.VisualElement.prototype.getAutoHatchFill = function() {
-  return /** @type {acgraph.vector.HatchFill} */ ('none');
-};
-
-
-/**
  * Resolves color for element (node, conflict, flow, dropoff).
  * @param {string} name Color name - fill, stroke, hatchFill
  * @param {anychart.PointState|number} state
@@ -186,13 +136,11 @@ anychart.sankeyModule.elements.VisualElement.prototype.getAutoHatchFill = functi
  */
 anychart.sankeyModule.elements.VisualElement.prototype.resolveColor = function(name, state, context) {
   var result;
-  var stateObject = state == anychart.PointState.NORMAL ? this.normal_ : state == anychart.PointState.HOVER ? this.hovered_ : this.selected_;
+  var stateObject = state ? this.hovered_ : this.normal_;
   result = stateObject.getOption(name) || this.normal_.getOption(name);
 
   if (goog.isFunction(result)) {
     result = result.call(context, context);
-  } else if (result == true) {
-    return this.getAutoHatchFill();
   }
 
   return result;
@@ -208,7 +156,6 @@ anychart.sankeyModule.elements.VisualElement.prototype.serialize = function() {
 
   json['normal'] = this.normal_.serialize();
   json['hovered'] = this.hovered_.serialize();
-  json['selected'] = this.selected_.serialize();
 
   return json;
 };
@@ -223,13 +170,12 @@ anychart.sankeyModule.elements.VisualElement.prototype.setupByJSON = function(co
   this.normal_.setupInternal(!!opt_default, config);
   this.normal_.setupInternal(!!opt_default, config['normal']);
   this.hovered_.setupInternal(!!opt_default, config['hovered']);
-  this.selected_.setupInternal(!!opt_default, config['selected']);
 };
 
 
 /** @inheritDoc */
 anychart.sankeyModule.elements.VisualElement.prototype.disposeInternal = function() {
-  goog.disposeAll(this.tooltip_, this.normal_, this.hovered_, this.selected_);
+  goog.disposeAll(this.tooltip_, this.normal_, this.hovered_);
   anychart.sankeyModule.elements.VisualElement.base(this, 'disposeInternal');
 };
 

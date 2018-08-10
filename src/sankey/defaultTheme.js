@@ -14,7 +14,9 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
     'node': {
       'normal': {
         'fill': anychart.core.defaultTheme.returnSourceColor,
-        'stroke': anychart.core.defaultTheme.returnDarkenSourceColor
+        'stroke': function() {
+          return this.conflict ? '2 red' : anychart.core.defaultTheme.returnDarkenSourceColor;
+        }
       },
       'hovered': {
         'fill': anychart.core.defaultTheme.returnDarkenSourceColor
@@ -28,13 +30,6 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
       },
       'hovered': {
         'fill': anychart.core.defaultTheme.returnDarkenSourceColor
-      }
-    },
-
-    'conflict': {
-      'normal': {
-        'fill': anychart.core.defaultTheme.returnSourceColor,
-        'stroke': '2 red'
       }
     },
 
