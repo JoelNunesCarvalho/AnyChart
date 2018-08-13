@@ -1194,19 +1194,19 @@ anychart.core.ChartWithSeries.prototype.resizeHandler = function(e) {
 
 /** @inheritDoc */
 anychart.core.ChartWithSeries.prototype.onLegendSignal = function(e) {
-  anychart.core.ChartWithSeries.base(this, 'onLegendSignal', e);
   if (e.hasSignal(anychart.Signal.BOUNDS_CHANGED)) {
-    this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA, anychart.Signal.BOUNDS_CHANGED);
+    this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA);
   }
+  anychart.core.ChartWithSeries.base(this, 'onLegendSignal', e);
 };
 
 
 /** @inheritDoc */
-anychart.core.ChartWithSeries.prototype.onTitleSignal = function(event) {
-  anychart.core.ChartWithSeries.base(this, 'onTitleSignal', event);
-  if (event.hasSignal(anychart.Signal.BOUNDS_CHANGED)) {
-    this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA, anychart.Signal.BOUNDS_CHANGED);
+anychart.core.ChartWithSeries.prototype.onTitleSignal = function(e) {
+  if (e.hasSignal(anychart.Signal.BOUNDS_CHANGED)) {
+    this.invalidateState(anychart.enums.Store.SERIES_CHART, anychart.enums.State.DATA_AREA);
   }
+  anychart.core.ChartWithSeries.base(this, 'onTitleSignal', e);
 };
 
 
