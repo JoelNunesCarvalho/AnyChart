@@ -15,7 +15,7 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
       'normal': {
         'fill': anychart.core.defaultTheme.returnSourceColor,
         'stroke': function() {
-          return this.conflict ? '2 red' : anychart.core.defaultTheme.returnDarkenSourceColor;
+          return this['conflict'] ? '2 red' : anychart.core.defaultTheme.returnDarkenSourceColor;
         }
       },
       'hovered': {

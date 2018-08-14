@@ -23,7 +23,7 @@ anychart.sankeyModule.Chart = function() {
   this.bindHandlersToComponent(this,
       this.handleMouseOverAndMove,    // override from anychart.core.Chart
       this.handleMouseOut,            // override from anychart.core.Chart
-      this.handleMouseClick_,         // click handler
+      null,                           // click handler
       this.handleMouseOverAndMove,    // override from anychart.core.Chart
       null,                           // all handler
       this.handleMouseDown);          // anychart.core.Chart
@@ -521,7 +521,7 @@ anychart.sankeyModule.Chart.prototype.createContextProvider = function(tag) {
 anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
   var domTarget = event['domTarget'];
   var tag = domTarget.tag;
-  var state, context;
+  var context;
   var fill, stroke;
   var tooltip;
 
@@ -530,48 +530,48 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
       // node and conflict node
-      state = anychart.PointState.HOVER;
-      context = this.getColorResolutionContext(tag);
-
-      fill = this.node_.getFill(state, context);
-      stroke = this.node_.getStroke(state, context);
-      domTarget.fill(fill);
-      domTarget.stroke(stroke);
 
       tooltip = this.node_.tooltip();
+      context = this.getColorResolutionContext(tag);
+
+      fill = this.node_.getFill(anychart.PointState.HOVER, context);
+      stroke = this.node_.getStroke(anychart.PointState.HOVER, context);
+      domTarget.fill(fill);
+      domTarget.stroke(stroke);
 
       var flows = goog.array.concat(tag.node.incomeFlows, tag.node.outcomeFlows);
       for (var i = 0; i < flows.length; i++) {
         var flowPath = flows[i].path;
         var flowTag = flowPath.tag;
         context = this.getColorResolutionContext(flowTag);
-        fill = this.flow_.getFill(state, context);
-        stroke = this.flow_.getStroke(state, context);
+        fill = this.flow_.getFill(anychart.PointState.HOVER, context);
+        stroke = this.flow_.getStroke(anychart.PointState.HOVER, context);
         flowPath.fill(fill).stroke(stroke);
       }
+
     } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) {
       // flow
-      state = tag.isSelected ? anychart.PointState.SELECT : anychart.PointState.HOVER;
       tooltip = this.flow_.tooltip();
       context = this.getColorResolutionContext(tag);
-      fill = this.flow_.getFill(state, context);
-      stroke = this.flow_.getStroke(state, context);
+
+      fill = this.flow_.getFill(anychart.PointState.HOVER, context);
+      stroke = this.flow_.getStroke(anychart.PointState.HOVER, context);
       domTarget.fill(fill);
       domTarget.stroke(stroke);
 
       var flow = tag.flow;
       context = this.getColorResolutionContext(flow.from.path.tag);
-      fill = this.node_.getFill(state, context);
-      stroke = this.node_.getStroke(state, context);
+      fill = this.node_.getFill(anychart.PointState.HOVER, context);
+      stroke = this.node_.getStroke(anychart.PointState.HOVER, context);
       flow.from.path.fill(fill).stroke(stroke);
 
       context = this.getColorResolutionContext(flow.to.path.tag);
-      fill = this.node_.getFill(state, context);
-      stroke = this.node_.getStroke(state, context);
+      fill = this.node_.getFill(anychart.PointState.HOVER, context);
+      stroke = this.node_.getStroke(anychart.PointState.HOVER, context);
       flow.to.path.fill(fill).stroke(stroke);
     } else {
-      tooltip = this.flow_.tooltip();
       // dropoff flow
+      tooltip = this.flow_.tooltip();
     }
     tooltip.showFloat(event['clientX'], event['clientY'], this.createContextProvider(tag));
   }
@@ -582,7 +582,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
 anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
   var domTarget = event['domTarget'];
   var tag = domTarget.tag;
-  var state, context;
+  var context;
   var fill, stroke;
   this.tooltip().hide();
   if (tag) {
@@ -590,10 +590,9 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
       // node and conflict node
-      state = anychart.PointState.NORMAL;
       context = this.getColorResolutionContext(tag);
-      fill = this.node_.getFill(state, context);
-      stroke = this.node_.getStroke(state, context);
+      fill = this.node_.getFill(anychart.PointState.NORMAL, context);
+      stroke = this.node_.getStroke(anychart.PointState.NORMAL, context);
       domTarget.fill(fill);
       domTarget.stroke(stroke);
 
@@ -602,44 +601,33 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
         var flowPath = flows[i].path;
         var flowTag = flowPath.tag;
         context = this.getColorResolutionContext(flowTag);
-        fill = this.flow_.getFill(state, context);
-        stroke = this.flow_.getStroke(state, context);
+        fill = this.flow_.getFill(anychart.PointState.NORMAL, context);
+        stroke = this.flow_.getStroke(anychart.PointState.NORMAL, context);
         flowPath.fill(fill).stroke(stroke);
       }
 
     } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) {
       // flow
-      state = tag.isSelected ? anychart.PointState.SELECT : anychart.PointState.NORMAL;
       context = this.getColorResolutionContext(tag);
-      fill = this.flow_.getFill(state, context);
-      stroke = this.flow_.getStroke(state, context);
+      fill = this.flow_.getFill(anychart.PointState.NORMAL, context);
+      stroke = this.flow_.getStroke(anychart.PointState.NORMAL, context);
       domTarget.fill(fill);
       domTarget.stroke(stroke);
 
       var flow = tag.flow;
       context = this.getColorResolutionContext(flow.from.path.tag);
-      fill = this.node_.getFill(state, context);
-      stroke = this.node_.getStroke(state, context);
+      fill = this.node_.getFill(anychart.PointState.NORMAL, context);
+      stroke = this.node_.getStroke(anychart.PointState.NORMAL, context);
       flow.from.path.fill(fill).stroke(stroke);
 
       context = this.getColorResolutionContext(flow.to.path.tag);
-      fill = this.node_.getFill(state, context);
-      stroke = this.node_.getStroke(state, context);
+      fill = this.node_.getFill(anychart.PointState.NORMAL, context);
+      stroke = this.node_.getStroke(anychart.PointState.NORMAL, context);
       flow.to.path.fill(fill).stroke(stroke);
     } else {
       // dropoff flow
     }
   }
-};
-
-
-/**
- * Handler for mouse click event.
- * @private
- * @param {anychart.core.MouseEvent} event Event object.
- */
-anychart.sankeyModule.Chart.prototype.handleMouseClick_ = function(event) {
-
 };
 
 
