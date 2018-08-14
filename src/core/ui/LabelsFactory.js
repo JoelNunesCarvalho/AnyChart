@@ -9,6 +9,7 @@ goog.require('anychart.core.VisualBase');
 goog.require('anychart.core.reporting');
 goog.require('anychart.core.settings');
 goog.require('anychart.core.ui.Background');
+goog.require('anychart.core.ui.Text');
 goog.require('anychart.core.utils.Padding');
 goog.require('anychart.core.utils.TokenParser');
 goog.require('anychart.enums');
@@ -2155,8 +2156,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
       anychart.enums.Anchor.CENTER :
       anychart.core.ui.LabelsFactory.anchorNoAutoNormalizer(this.mergedSettings['anchor']) || anychart.enums.Anchor.LEFT_TOP;
 
-  // var anchor = anychart.core.ui.LabelsFactory.anchorNoAutoNormalizer(this.mergedSettings['anchor']) || anychart.enums.Anchor.LEFT_TOP;
-
   var isVertical = this.autoVertical();
 
   var offsetX = this.mergedSettings['offsetX'];
@@ -2245,7 +2244,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawConnector = function() {
 
 /**
  * Applies text settings to text element.
- * @param {!acgraph.vector.Text} textElement Text element to apply settings to.
+ * @param {!acgraph.vector.Text|!anychart.core.ui.Text} textElement Text element to apply settings to.
  * @param {boolean} isInitial - Whether is initial operation.
  * @param {Object=} opt_settings .
  * @this {anychart.core.ui.LabelsFactory.Label|anychart.core.ui.LabelsFactory}
@@ -2258,7 +2257,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
           this.getOwnOption :
           anychart.core.ui.LabelsFactory.prototype.getOwnAndAutoOption;
 
-  if (this.isComplex) {
+  if (anychart.utils.instanceOf(textElement, acgraph.vector.Text)) {
     textVal = target.call(this, 'text');
     useHtml = target.call(this, 'useHtml');
 
@@ -2300,6 +2299,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
     }
 
     textElement.style(style);
+    textElement.applySettings();
   }
 };
 
@@ -2312,7 +2312,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
   var factory = this.factory_;
   var mergedSettings, isBackgroundEnabled;
 
-  if (!this.layer_) this.layer_ = acgraph.unmanagedLayer();
+  if (!this.layer_) this.layer_ = acgraph.layer();
   this.layer_.tag = this.index_;
 
   var enabled = this.getFinalSettings('enabled');
@@ -2409,7 +2409,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     }
 
     this.getTextElement();
-    this.layer_.content(this.textElement.getDomElement());
+    // this.layer_.content(this.textElement.getDomElement());
+
+    if (!this.isComplex && !this.simpleTextLayer) {
+      this.simpleTextLayer = acgraph.unmanagedLayer();
+      this.simpleTextLayer.parent(this.layer_);
+      this.simpleTextLayer.content(this.textElement.getDomElement());
+    }
 
     //define parent bounds
     var parentWidth, parentHeight;

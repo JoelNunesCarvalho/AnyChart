@@ -1250,7 +1250,6 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
     var text = labels.callFormat(mergedSettings['format'], formatProvider, index);
     textEl.text(goog.isDef(text) ? String(text) : '');
     label.applyTextSettings(textEl, true, mergedSettings);
-    textEl.applySettings();
   }
 
   return label;

@@ -1,4 +1,5 @@
 goog.provide('anychart.core.ui.Text');
+goog.require('anychart.math.Rect');
 
 
 /**
@@ -12,26 +13,46 @@ anychart.core.ui.Text = function() {
 };
 
 
+/**
+ * Text.
+ * @param {string} value
+ */
 anychart.core.ui.Text.prototype.text = function(value) {
   this.text_ = value;
 };
 
 
+/**
+ * Style object.
+ * @param {Object} value
+ */
 anychart.core.ui.Text.prototype.style = function(value) {
   this.style_ = value;
 };
 
 
+/**
+ * Creating DOM element.
+ */
 anychart.core.ui.Text.prototype.createDom = function() {
   this.domElement = this.renderer.createTextElement();
 };
 
 
+/**
+ * Render to container
+ * @param {Element} element
+ */
 anychart.core.ui.Text.prototype.renderTo = function(element) {
   element.appendChild(this.getDomElement());
 };
 
 
+/**
+ * Setting position.
+ * @param {number} x
+ * @param {number} y
+ */
 anychart.core.ui.Text.prototype.setPosition = function(x, y) {
   var dom = this.getDomElement();
 
@@ -42,6 +63,10 @@ anychart.core.ui.Text.prototype.setPosition = function(x, y) {
 };
 
 
+/**
+ * Returns text DOM element.
+ * @return {Element}
+ */
 anychart.core.ui.Text.prototype.getDomElement = function() {
   if (!this.domElement)
     this.createDom();
@@ -50,6 +75,9 @@ anychart.core.ui.Text.prototype.getDomElement = function() {
 };
 
 
+/**
+ * Applying settings.
+ */
 anychart.core.ui.Text.prototype.applySettings = function() {
   var style = this.style_;
   var dom = this.getDomElement();
@@ -98,12 +126,16 @@ anychart.core.ui.Text.prototype.applySettings = function() {
 };
 
 
+/**
+ * Getting bounds.
+ * @return {anychart.math.Rect}
+ */
 anychart.core.ui.Text.prototype.getBounds = function() {
   if (!this.bounds_) {
     var dom = this.getDomElement();
     var bbox = dom['getBBox']();
 
-    this.bounds_ = new goog.math.Rect(bbox.x, -bbox.y, bbox.width, bbox.height);
+    this.bounds_ = new anychart.math.Rect(bbox.x, -bbox.y, bbox.width, bbox.height);
     this.baseLine = -bbox.y;
   }
   return this.bounds_;
