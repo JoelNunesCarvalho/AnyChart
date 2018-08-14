@@ -772,85 +772,6 @@ anychart.sankeyModule.Chart.prototype.paletteInvalidated_ = function(event) {
 };
 
 
-anychart.sankeyModule.Chart.colorResolversCache = {};
-
-
-anychart.sankeyModule.Chart.getColorResolver = function(colorName, colorType, chart) {
-  if (!colorName) return anychart.color.getNullColor;
-  var hash = colorType + '|' + colorName;
-  var result = anychart.sankeyModule.Chart.colorResolversCache[hash];
-  if (!result) {
-    var normalizerFunc;
-    switch (colorType) {
-      case anychart.enums.ColorType.STROKE:
-        normalizerFunc = anychart.core.settings.strokeOrFunctionSimpleNormalizer;
-        break;
-      case anychart.enums.ColorType.HATCH_FILL:
-        normalizerFunc = anychart.core.settings.hatchFillOrFunctionSimpleNormalizer;
-        break;
-      default:
-      case anychart.enums.ColorType.FILL:
-        normalizerFunc = anychart.core.settings.fillOrFunctionSimpleNormalizer;
-        break;
-    }
-    anychart.sankeyModule.Chart.colorResolversCache[hash] = result = goog.partial(anychart.sankeyModule.Chart.getColor,
-        colorName, normalizerFunc, colorType == anychart.enums.ColorType.HATCH_FILL, chart);
-  }
-  return result;
-};
-
-
-/**
- * Returns normalized color.
- * @param {string} colorName
- * @param {Function} normalizer
- * @param {boolean} isHatchFill
- * @param {anychart.sankeyModule.Chart} chart
- * @param {(anychart.PointState|number)} state
- * @param {acgraph.vector.Path} path
- * @return {acgraph.vector.Fill|acgraph.vector.Stroke|acgraph.vector.PatternFill}
- */
-anychart.sankeyModule.Chart.getColor = function(colorName, normalizer, isHatchFill, chart, state, path) {
-  var context, stateColor;
-  if (state != anychart.PointState.NORMAL) {
-    stateColor = chart.resolveOption(colorName, state, normalizer);
-    if (isHatchFill && stateColor == true)
-      stateColor = normalizer(chart.getAutoHatchFill());
-    if (goog.isDef(stateColor)) {
-      if (!goog.isFunction(stateColor))
-        return /** @type {acgraph.vector.Fill|acgraph.vector.Stroke|acgraph.vector.PatternFill} */(stateColor);
-      else if (isHatchFill) {
-        context = chart.getHatchFillResolutionContext();
-        return normalizer(stateColor.call(context, context));
-      }
-    }
-  }
-
-  var color = chart.resolveOption(colorName, 0, normalizer);
-
-  if (isHatchFill && color == true)
-    color = normalizer(chart.getAutoHatchFill());
-
-  if (goog.isFunction(color)) {
-    context = isHatchFill ?
-        chart.getHatchFillResolutionContext() :
-        chart.getColorResolutionContext(path);
-    color = color.call(context, context);
-  }
-  if (stateColor) {
-    context = chart.getColorResolutionContext();
-    color = normalizer(stateColor.call(context, context));
-  }
-  return /** @type {acgraph.vector.Fill|acgraph.vector.Stroke|acgraph.vector.PatternFill} */(color);
-};
-
-
-anychart.sankeyModule.Chart.prototype.resolveOption = function(colorName, state, normalizer) {
-  var option = this.getOption(colorName) || this.getOption('nodeFill');
-  return normalizer(option);
-};
-
-
 /**
  * Returns context for color resolution.
  * @param {Object} tag Tag
@@ -886,25 +807,6 @@ anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag, 
       'sourceColor': palette.itemAt(from.id)
     };
   }
-};
-
-
-/**
- * Returns auto hatch fill.
- * @return {acgraph.vector.HatchFill}
- */
-anychart.sankeyModule.Chart.prototype.getAutoHatchFill = function() {
-  //TODO(AntonKagakin): waits for hatch fill implementation
-  return /** @type {acgraph.vector.HatchFill} */ ('none');
-};
-
-
-/**
- * Hatch fill resolution context.
- * @return {{}}
- */
-anychart.sankeyModule.Chart.prototype.getHatchFillResolutionContext = function() {
-  return {};
 };
 
 
