@@ -120,6 +120,10 @@ anychart.core.ui.Text.prototype.applySettings = function() {
       cssString += 'opacity: ' + style['fontOpacity'] + ';';
     }
 
+    if (style['disablePointerEvents']) {
+      cssString += 'pointer-events: ' + (style['disablePointerEvents'] ? 'none' : '') + ';';
+    }
+
     dom.style.cssText = cssString;
   }
   dom.textContent = this.text_;

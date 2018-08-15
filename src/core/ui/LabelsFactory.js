@@ -2193,7 +2193,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   position.y -= anchorCoordinate.y;
 
   // this.container().pie(position.x, position.y, 2, 0, 360).fill('red').stroke('black').zIndex(1000);
-
+  //
   // this.container().rect().setBounds(new anychart.math.rect(position.x, position.y, bounds.width, bounds.height))
   //     .fill('none').stroke('red').zIndex(1000);
 
@@ -2297,6 +2297,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
       var field = fields[i];
       style[field] = target.call(this, field);
     }
+    // style['disablePointerEvents'] = true;
 
     textElement.style(style);
     textElement.applySettings();
@@ -2409,10 +2410,10 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     }
 
     this.getTextElement();
-    // this.layer_.content(this.textElement.getDomElement());
 
     if (!this.isComplex && !this.simpleTextLayer) {
       this.simpleTextLayer = acgraph.unmanagedLayer();
+      this.simpleTextLayer.zIndex(1);
       this.simpleTextLayer.parent(this.layer_);
       this.simpleTextLayer.content(this.textElement.getDomElement());
     }
@@ -2644,6 +2645,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
   if (!this.textElement ||
       (this.isComplex && anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text)) ||
       (!this.isComplex && anychart.utils.instanceOf(this.textElement, acgraph.vector.Text))) {
+
     if (this.isComplex) {
       this.textElement = new acgraph.vector.Text();
 
@@ -2653,8 +2655,10 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
       this.textElement.disablePointerEvents(true);
     } else {
       this.textElement = new anychart.core.ui.Text();
+      this.textElement.getDomElement().setAttribute('aria-hidden', 'true');
     }
   }
+
   return this.textElement;
 };
 

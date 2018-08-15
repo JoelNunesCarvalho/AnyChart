@@ -2558,6 +2558,17 @@ anychart.core.series.Base.prototype.drawSingleFactoryElement = function(factorie
       label.autoAnchor(this.resolveAutoAnchor(opt_position, Number(label.getFinalSettings('rotation')) || 0));
       this.checkBoundsCollision(/** @type {anychart.core.ui.LabelsFactory} */(mainFactory), label);
     }
+
+    var textEl = label.textElement;
+    if (!label.textElement) {
+      textEl = label.getTextElement();
+      var measurementNode = acgraph.getRenderer().createMeasurement();
+      textEl.renderTo(measurementNode);
+    }
+    var mergedSettings = label.getMergedSettings();
+    var text = mainFactory.callFormat(mergedSettings['format'], formatProvider, index);
+    textEl.text(goog.isDef(text) ? String(text) : '');
+    label.applyTextSettings(textEl, true, mergedSettings);
   } else {
     var currentFactory = /** @type {anychart.core.ui.MarkersFactory} */(factories[1] || mainFactory);
     var iterator = this.getIterator();
