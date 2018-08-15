@@ -231,7 +231,8 @@ anychart.core.ui.LabelsFactory.textFields = [
   'selectable',
   'disablePointerEvents',
   'wordWrap',
-  'wordBreak'
+  'wordBreak',
+  'rotation'
 ];
 
 
@@ -752,6 +753,12 @@ anychart.core.ui.LabelsFactory.prototype.draw = function() {
   if (manualSuspend) stage.suspend();
 
   if (this.labels_) {
+    goog.array.forEach(this.labels_, function(label, index) {
+      if (label && label.textElement && !label.isComplex) {
+        label.textElement.getBounds();
+      }
+    }, this);
+
     goog.array.forEach(this.labels_, function(label, index) {
       if (label) {
         label.container(this.layer_);
@@ -2192,11 +2199,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   position.x -= anchorCoordinate.x;
   position.y -= anchorCoordinate.y;
 
-  // this.container().pie(position.x, position.y, 2, 0, 360).fill('red').stroke('black').zIndex(1000);
-  //
-  // this.container().rect().setBounds(new anychart.math.rect(position.x, position.y, bounds.width, bounds.height))
-  //     .fill('none').stroke('red').zIndex(1000);
-
   var offsetXNormalized = goog.isDef(offsetX) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetX), parentWidth) : 0;
   var offsetYNormalized = goog.isDef(offsetY) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetY), parentHeight) : 0;
 
@@ -2207,6 +2209,14 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
 
   bounds.left = position.x;
   bounds.top = position.y;
+
+  // if (!this.anchPoint)
+  //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
+  // this.anchPoint.center({x: position.x, y: position.y});
+  //
+  // if (!this.labelBounds)
+  //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
+  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
   if (this.isComplex) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
@@ -2616,8 +2626,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
       this.backgroundElement_.draw();
     }
 
-    var coordinateByAnchor = anychart.utils.getCoordinateByAnchor(this.bounds_, this.mergedSettings['anchor']);
-    this.layer_.setRotation(/** @type {number} */(this.mergedSettings['rotation']), coordinateByAnchor.x, coordinateByAnchor.y);
+    if (this.mergedSettings['rotation']) {
+      var coordinateByAnchor = anychart.utils.getCoordinateByAnchor(this.bounds_, this.mergedSettings['anchor']);
+      var tx = goog.math.AffineTransform.getRotateInstance(goog.math.toRadians(/** @type {number} */(this.mergedSettings['rotation'])),
+          coordinateByAnchor.x, coordinateByAnchor.y);
+
+      this.layer_.setTransformationMatrix(tx.getScaleX(), tx.getShearY(), tx.getShearX(), tx.getScaleY(), tx.getTranslateX(), tx.getTranslateY());
+    }
 
     this.invalidate(anychart.ConsistencyState.LABELS_FACTORY_CONNECTOR);
     this.markConsistent(anychart.ConsistencyState.LABELS_FACTORY_POSITION);

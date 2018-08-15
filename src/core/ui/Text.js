@@ -56,10 +56,21 @@ anychart.core.ui.Text.prototype.renderTo = function(element) {
 anychart.core.ui.Text.prototype.setPosition = function(x, y) {
   var dom = this.getDomElement();
 
-  if (goog.isDef(x))
-    dom.setAttribute('x', x);
-  if (goog.isDef(y))
-    dom.setAttribute('y', y + this.baseLine);
+  var positionChanged = false;
+  if (x != this.x_ && goog.isDef(x)) {
+    this.x_ = x;
+    dom.setAttribute('x', this.x_);
+    positionChanged = true;
+  }
+
+  if (y != this.y_ && goog.isDef(y)) {
+    this.y_ = y;
+    dom.setAttribute('y', this.y_ + this.baseLine);
+    positionChanged = true;
+  }
+  // if (positionChanged) {
+  //   this.bounds_ = null;
+  // }
 };
 
 
