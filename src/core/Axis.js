@@ -844,6 +844,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
           this.insideBounds_ : null;
       var isLabelInInsideSpace;
 
+      debugger
 
       for (var i = 0, len = ticksArrLen; i < len; i++) {
         this.getLabel(i, true, scaleTicksArr, opt_bounds)
@@ -1270,7 +1271,7 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
  * @private
  */
 anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArray, opt_parentBounds) {
-  if (!isMajor && this.scale() && !(anychart.utils.instanceOf(this.scale(), anychart.scales.ScatterBase)))
+  if ((!isMajor && this.scale() && !(anychart.utils.instanceOf(this.scale(), anychart.scales.ScatterBase))) || index < 0)
     return null;
 
   var boundsCache = isMajor ? this.labelsBounds_ : this.minorLabelsBounds_;
