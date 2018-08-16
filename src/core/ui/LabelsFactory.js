@@ -754,7 +754,11 @@ anychart.core.ui.LabelsFactory.prototype.draw = function() {
 
   if (this.labels_) {
     goog.array.forEach(this.labels_, function(label, index) {
-      if (label && label.textElement && !label.isComplex) {
+        label.firstDraw();
+    }, this);
+
+    goog.array.forEach(this.labels_, function(label, index) {
+      if (label && label.textElement && !label.isComplexText()) {
         label.textElement.getBounds();
       }
     }, this);
@@ -2210,13 +2214,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   bounds.left = position.x;
   bounds.top = position.y;
 
-  // if (!this.anchPoint)
-  //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
-  // this.anchPoint.center({x: position.x, y: position.y});
-  //
-  // if (!this.labelBounds)
-  //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
-  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+  if (!this.anchPoint)
+    this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
+  this.anchPoint.center({x: position.x, y: position.y});
+
+  if (!this.labelBounds)
+    this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
+  this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
   if (this.isComplex) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
@@ -2311,6 +2315,38 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
 
     textElement.style(style);
     textElement.applySettings();
+  }
+};
+
+
+anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
+  var mergedSettings = this.getMergedSettings();
+
+  var isWidthSet = !goog.isNull(mergedSettings['width']);
+  var isHeightSet = !goog.isNull(mergedSettings['height']);
+  var isHtml = mergedSettings['useHtml'];
+
+  var text = String(this.factory_.callFormat(mergedSettings['format'], this.formatProvider(), this.getIndex()));
+
+  text = goog.string.canonicalizeNewlines(goog.string.normalizeSpaces(text));
+  var textArr = text.split(/\n/g);
+
+  this.isComplex = textArr.length != 1 || isWidthSet || isHeightSet || isHtml;
+};
+
+
+anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
+  if (!this.isComplexText()) {
+    var textEl = this.textElement;
+    if (!textEl) {
+      textEl = this.getTextElement();
+      var measurementNode = acgraph.getRenderer().createMeasurement();
+      textEl.renderTo(measurementNode);
+    }
+    var mergedSettings = this.getMergedSettings();
+    var text = this.factory_.callFormat(mergedSettings['format'], this.formatProvider(), this.getIndex());
+    textEl.text(goog.isDef(text) ? String(text) : '');
+    this.applyTextSettings(textEl, true, mergedSettings);
   }
 };
 

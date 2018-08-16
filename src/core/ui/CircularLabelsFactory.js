@@ -384,6 +384,14 @@ anychart.core.ui.CircularLabelsFactory.Label.prototype.drawLabel = function(boun
   bounds.left = /** @type {number} */(x);
   bounds.top = /** @type {number} */(y);
 
+  // if (!this.anchPoint)
+  //   this.anchPoint = this.container().circle(x, y, 2).fill('red').stroke('black').zIndex(1000);
+  // this.anchPoint.center({x: x, y: y});
+  //
+  // if (!this.labelBounds)
+  //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
+  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+
   this.mergedSettings['rotation'] = this.getRotation(angle);
   if (this.isComplex) {
     this.textElement.x(/** @type {number} */(this.textX)).y(/** @type {number} */(this.textY));

@@ -2531,55 +2531,6 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
 
   var isNotNormalState = hovered || selected;
 
-  var isFitToSlice = true;
-  if ((!isNotNormalState || (isNotNormalState && !this.getOption('forceHoverLabels'))) && this.getOption('overlapMode') != anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP) {
-    var start = /** @type {number} */ (iterator.meta('start'));
-    var sweep = /** @type {number} */ (iterator.meta('sweep'));
-
-    var cx = this.cx;
-    var cy = this.cy;
-
-    var angle;
-    var explode = this.getExplode(pointState);
-    if (explode) {
-      angle = (start + sweep / 2) * Math.PI / 180;
-      var ex = explode * Math.cos(angle);
-      var ey = (mode3d ? this.get3DYRadius(explode) : explode) * Math.sin(angle);
-      cx += ex;
-      cy += ey;
-    }
-
-    angle = start * Math.PI / 180;
-    var ax = cx + this.radiusValue_ * Math.cos(angle);
-    var ay = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
-
-    angle = (start + sweep) * Math.PI / 180;
-    var bx = cx + this.radiusValue_ * Math.cos(angle);
-    var by = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
-
-    if (!this.measureLabel_) {
-      this.measureLabel_ = new anychart.core.ui.CircularLabelsFactory.Label();
-    } else {
-      this.measureLabel_.clear();
-    }
-    this.measureLabel_.formatProvider(formatProvider);
-    this.measureLabel_.positionProvider(positionProvider);
-    this.measureLabel_.resetSettings();
-    this.measureLabel_.parentLabelsFactory(this.labels());
-    this.measureLabel_.currentLabelsFactory(mainFactory);
-    this.measureLabel_.setSettings(/** @type {Object} */(pointLabel), /** @type {Object} */(statePointLabel));
-
-    var bounds = this.labels().measureWithTransform(this.measureLabel_, null, null, index);
-
-    var singlePiePoint = ((iterator.getRowsCount() == 1 || sweep == 360) && !this.innerRadiusValue_);
-    var notIntersectStartLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(ax, ay, cx, cy, bounds);
-    var notIntersectEndLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(cx, cy, bx, by, bounds);
-    var notIntersectPieOuterRadius = !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.radiusValue_, bounds);
-    var notIntersectPieInnerRadius = singlePiePoint || anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.innerRadiusValue_, bounds);
-
-    isFitToSlice = notIntersectStartLine && notIntersectEndLine && notIntersectPieOuterRadius && notIntersectPieInnerRadius;
-  }
-
   var isDraw = isNotNormalState ?
       goog.isNull(stateLabelEnabled) ?
           goog.isNull(stateFactory.enabled()) ?
@@ -2592,7 +2543,7 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
           mainFactory.enabled() :
           labelEnabled;
 
-  if (isDraw && isFitToSlice) {
+  if (isDraw) {
     if (label) {
       label.formatProvider(formatProvider);
       label.positionProvider(positionProvider);
@@ -2613,6 +2564,50 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
         label.container().parent(/** @type {acgraph.vector.ILayer} */(mainFactory.container()));
       }
     }
+
+    var isFitToSlice = true;
+    if ((!isNotNormalState || (isNotNormalState && !this.getOption('forceHoverLabels'))) && this.getOption('overlapMode') != anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP) {
+      var start = /** @type {number} */ (iterator.meta('start'));
+      var sweep = /** @type {number} */ (iterator.meta('sweep'));
+
+      var cx = this.cx;
+      var cy = this.cy;
+
+      var angle;
+      var explode = this.getExplode(pointState);
+      if (explode) {
+        angle = (start + sweep / 2) * Math.PI / 180;
+        var ex = explode * Math.cos(angle);
+        var ey = (mode3d ? this.get3DYRadius(explode) : explode) * Math.sin(angle);
+        cx += ex;
+        cy += ey;
+      }
+
+      angle = start * Math.PI / 180;
+      var ax = cx + this.radiusValue_ * Math.cos(angle);
+      var ay = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
+
+      angle = (start + sweep) * Math.PI / 180;
+      var bx = cx + this.radiusValue_ * Math.cos(angle);
+      var by = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
+
+      label.firstDraw();
+      var bounds = label.textElement.getBounds();
+      // console.log(bounds);
+
+      var singlePiePoint = ((iterator.getRowsCount() == 1 || sweep == 360) && !this.innerRadiusValue_);
+      var notIntersectStartLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(ax, ay, cx, cy, bounds);
+      var notIntersectEndLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(cx, cy, bx, by, bounds);
+      var notIntersectPieOuterRadius = !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.radiusValue_, bounds);
+      var notIntersectPieInnerRadius = singlePiePoint || anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.innerRadiusValue_, bounds);
+
+      isFitToSlice = notIntersectStartLine && notIntersectEndLine && notIntersectPieOuterRadius && notIntersectPieInnerRadius;
+    }
+
+    if (!isFitToSlice) {
+      mainFactory.clear(index);
+    }
+
   } else if (label) {
     mainFactory.clear(label.getIndex());
   }
