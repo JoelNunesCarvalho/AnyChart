@@ -603,7 +603,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
 
       for (i = 0; i < tag.node.incomeFlows.length; i++) {
         var incomeFlow = tag.node.incomeFlows[i];
-        incomeFlow.label.autoAnchor('left-bottom');
+        incomeFlow.label.autoAnchor(anychart.enums.Anchor.LEFT_BOTTOM);
         incomeFlow.label.positionProvider({
           'value': {
             'x': incomeFlow.leftTop.x,
@@ -615,7 +615,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
 
       for (i = 0; i < tag.node.outcomeFlows.length; i++) {
         var outcomeFlow = tag.node.outcomeFlows[i];
-        outcomeFlow.label.autoAnchor('right-bottom');
+        outcomeFlow.label.autoAnchor(anychart.enums.Anchor.RIGHT_BOTTOM);
         outcomeFlow.label.positionProvider({
           'value': {
             'x': outcomeFlow.rightTop.x,

@@ -226,3 +226,12 @@ anychart.sankeyModule.elements.VisualElement.prototype.disposeInternal = functio
 
 
 //endregion
+//region Exports
+//exports
+(function() {
+  var proto = anychart.sankeyModule.elements.VisualElement;
+  // state settings
+  proto['normal'] = proto.normal;
+  proto['hovered'] = proto.hovered;
+})();
+//endregion
