@@ -6,6 +6,7 @@ goog.require('anychart.sankeyModule.elements.VisualElement');
 /**
  * Node element settings.
  * @extends {anychart.sankeyModule.elements.VisualElement}
+ * @param {anychart.sankeyModule.Chart} chart
  * @constructor
  */
 anychart.sankeyModule.elements.Node = function(chart) {

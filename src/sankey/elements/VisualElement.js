@@ -4,6 +4,7 @@ goog.provide('anychart.sankeyModule.elements.VisualElement');
 goog.require('anychart.core.Base');
 goog.require('anychart.core.StateSettings');
 goog.require('anychart.core.settings');
+goog.require('anychart.core.ui.Tooltip');
 
 
 
@@ -72,7 +73,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.SUPPORTED_SIGNALS =
 anychart.sankeyModule.elements.VisualElement.prototype.tooltip = function(opt_value) {
   if (!this.tooltip_) {
     this.tooltip_ = new anychart.core.ui.Tooltip(0);
-    this.tooltip_.parent(this.chart.tooltip());
+    this.tooltip_.parent(/** @type {anychart.core.ui.Tooltip} */ (this.chart.tooltip()));
     this.tooltip_.chart(this.chart);
   }
   if (goog.isDef(opt_value)) {
@@ -185,7 +186,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.resolveColor = function(n
     result = result.call(context, context);
   }
 
-  return result;
+  return /** @type {acgraph.vector.Fill|acgraph.vector.Stroke} */ (result);
 };
 
 

@@ -3,6 +3,7 @@ goog.provide('anychart.sankeyModule.Chart');
 goog.require('anychart.core.SeparateChart');
 goog.require('anychart.core.StateSettings');
 goog.require('anychart.data.Set');
+goog.require('anychart.format.Context');
 goog.require('anychart.sankeyModule.elements.Dropoff');
 goog.require('anychart.sankeyModule.elements.Flow');
 goog.require('anychart.sankeyModule.elements.Node');
@@ -202,7 +203,7 @@ anychart.sankeyModule.Chart.prototype.isMissing_ = function(from, to, flow) {
  *   right: (number|undefined),
  *   bottom: (number|undefined),
  *   left: (number|undefined),
- *   label: ?anychart.core.ui.LabelsFactory.Label
+ *   label: (anychart.core.ui.LabelsFactory.Label|undefined)
  * }}
  */
 anychart.sankeyModule.Chart.Node;
@@ -214,7 +215,7 @@ anychart.sankeyModule.Chart.Node;
  *   from: anychart.sankeyModule.Chart.Node,
  *   to: ?anychart.sankeyModule.Chart.Node,
  *   weight: number,
- *   label: ?anychart.core.ui.LabelsFactory.Label
+ *   label: (anychart.core.ui.LabelsFactory.Label|undefined)
  * }}
  */
 anychart.sankeyModule.Chart.Flow;
@@ -316,7 +317,7 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
 
   /**
    * Flows information by row index
-   * @type {Object.<string, anychart.sankeyModule.Chart.Flow>}
+   * @type {Object.<(string|number), anychart.sankeyModule.Chart.Flow>}
    */
   this.flows = {};
 
@@ -529,6 +530,11 @@ anychart.sankeyModule.Chart.prototype.createLabelContextProvider = function(elem
 };
 
 
+/**
+ * Creates context provider for tooltip.
+ * @param {Object} tag
+ * @return {anychart.format.Context}
+ */
 anychart.sankeyModule.Chart.prototype.createContextProvider = function(tag) {
   if (!this.contextProvider_)
     this.contextProvider_ = new anychart.format.Context();
@@ -654,7 +660,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
       this.drawLabel_(this.dropoff_, tag.flow, anychart.PointState.HOVER);
       tooltip = this.dropoff_.tooltip();
     }
-    tooltip.showFloat(event['clientX'], event['clientY'], this.createContextProvider(tag));
+    tooltip.showFloat(event['clientX'], event['clientY'], this.createContextProvider(/** @type {Object} */ (tag)));
   }
 };
 
@@ -878,13 +884,12 @@ anychart.sankeyModule.Chart.prototype.paletteInvalidated_ = function(event) {
 /**
  * Returns context for color resolution.
  * @param {Object} tag Tag
- * @param {boolean=} opt_isHatchFill
  * @return {*}
  */
-anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag, opt_isHatchFill) {
+anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag) {
   var from, to, node;
   var type = tag.type;
-  var palette = opt_isHatchFill ? this.hatchFillPalette() : this.palette();
+  var palette = this.palette();
 
   if (type == anychart.sankeyModule.Chart.ElementType.NODE) { // node, conflict
     node = tag.node;
@@ -1085,7 +1090,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       }
     }
 
-    var curvy = this.getOption('curveFactor') * (bounds.width - nodeWidth) / (this.levels.length - 1);
+    var curvy = /** @type {number} */ (this.getOption('curveFactor')) * (bounds.width - nodeWidth) / (this.levels.length - 1);
 
     for (var dataIndex in this.flows) {
       var flow = this.flows[dataIndex];
@@ -1172,7 +1177,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
     for (i = 0; i < this.nodePaths.length; i++) {
       path = this.nodePaths[i];
-      context = this.getColorResolutionContext(path.tag);
+      context = this.getColorResolutionContext(/** @type {Object} */ (path.tag));
       fill = this.node_.getFill(0, context);
       stroke = this.node_.getStroke(0, context);
       path.fill(fill);
@@ -1181,7 +1186,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
     for (i = 0; i < this.flowPaths.length; i++) {
       path = this.flowPaths[i];
-      context = this.getColorResolutionContext(path.tag);
+      context = this.getColorResolutionContext(/** @type {Object} */ (path.tag));
       fill = this.flow_.getFill(0, context);
       stroke = this.flow_.getStroke(0, context);
       path.fill(fill);
@@ -1190,7 +1195,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
     for (i = 0; i < this.dropoffPaths.length; i++) {
       path = this.dropoffPaths[i];
-      context = this.getColorResolutionContext(path.tag);
+      context = this.getColorResolutionContext(/** @type {Object} */ (path.tag));
       fill = this.dropoff_.getFill(0, context);
       stroke = this.dropoff_.getStroke(0, context);
       path.fill(fill);
