@@ -375,6 +375,8 @@ anychart.ConsistencyState = {
   EVENT_MARKERS_DATA: 1 << 6,
   //---------------------------------- SANKEY STATES (CHART) ---------------------------------
   SANKEY_DATA: 1 << 12,
+  SANKEY_NODE_LABELS: 1 << 13, // node labels
+  SANKEY_FLOW_LABELS: 1 << 14, // flow and dropoff labels
   /**
    * Combination of all states.
    */

@@ -1,3 +1,4 @@
+//region Provide / Require
 goog.provide('anychart.sankeyModule.elements.VisualElement');
 
 goog.require('anychart.core.Base');
@@ -6,6 +7,8 @@ goog.require('anychart.core.settings');
 
 
 
+//endregion
+//region Constructor
 /**
  * Sankey visual element base settings.
  * @constructor
@@ -17,12 +20,16 @@ anychart.sankeyModule.elements.VisualElement = function(chart) {
   anychart.sankeyModule.elements.VisualElement.base(this, 'constructor');
 
   /**
+   * Sankey chart.
+   * @type {anychart.sankeyModule.Chart}
+   */
+  this.chart = chart;
+
+  /**
    * @type {anychart.core.ui.Tooltip}
    * @private
    */
   this.tooltip_ = null;
-
-  this.chart = chart;
 
   var descriptorsMap = {};
   anychart.core.settings.createDescriptorsMeta(descriptorsMap, [
@@ -32,21 +39,31 @@ anychart.sankeyModule.elements.VisualElement = function(chart) {
   ]);
 
   this.normal_ = new anychart.core.StateSettings(this, descriptorsMap, anychart.PointState.NORMAL);
+  this.normal_.setOption(anychart.core.StateSettings.LABELS_AFTER_INIT_CALLBACK, anychart.core.StateSettings.DEFAULT_LABELS_AFTER_INIT_CALLBACK);
   this.hovered_ = new anychart.core.StateSettings(this, descriptorsMap, anychart.PointState.HOVER);
+  this.hovered_.setOption(anychart.core.StateSettings.LABELS_AFTER_INIT_CALLBACK, function(factory) {
+    factory.markConsistent(anychart.ConsistencyState.ALL);
+  });
 };
 goog.inherits(anychart.sankeyModule.elements.VisualElement, anychart.core.Base);
 anychart.core.settings.populateAliases(anychart.sankeyModule.elements.VisualElement, ['fill', 'stroke', 'labels'], 'normal');
 
 
+//endregion
+//region ConsistencyStates / Signals
 /**
  * Supported signals mask.
  * @type {number}
  */
 anychart.sankeyModule.elements.VisualElement.prototype.SUPPORTED_SIGNALS =
     anychart.core.Base.prototype.SUPPORTED_SIGNALS |
-    anychart.Signal.NEEDS_REDRAW_APPEARANCE;
+    anychart.Signal.NEEDS_REDRAW_APPEARANCE |
+    anychart.Signal.NEEDS_UPDATE_TOOLTIP |
+    anychart.Signal.NEEDS_REDRAW_LABELS;
 
 
+//endregion
+//region Tooltip
 /**
  * Getter for tooltip settings.
  * @param {(Object|boolean|null)=} opt_value - Tooltip settings.
@@ -77,6 +94,29 @@ anychart.sankeyModule.elements.VisualElement.prototype.onTooltipSignal_ = functi
 };
 
 
+//endregion
+//region Labels
+/**
+ * Labels invalidation handler.
+ * @param {anychart.SignalEvent} e
+ * @private
+ */
+anychart.sankeyModule.elements.VisualElement.prototype.labelsInvalidated_ = function(e) {
+  this.dispatchSignal(anychart.Signal.NEEDS_REDRAW_LABELS);
+};
+
+
+/**
+ * Marks labels consistent.
+ */
+anychart.sankeyModule.elements.VisualElement.prototype.markLabelsConsistent = function() {
+  this.normal_.labels().markConsistent(anychart.ConsistencyState.ALL);
+  this.hovered_.labels().markConsistent(anychart.ConsistencyState.ALL);
+};
+
+
+//endregion
+//region State Settings
 /**
  * Normal state settings.
  * @param {!Object=} opt_value
@@ -105,6 +145,8 @@ anychart.sankeyModule.elements.VisualElement.prototype.hovered = function(opt_va
 };
 
 
+//endregion
+//region Color resolving
 /**
  * Returns fill for the element.
  * @param {anychart.PointState|number} state
@@ -147,6 +189,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.resolveColor = function(n
 };
 
 
+//endregion
 //region Serialize / Setup / Dispose
 /** @inheritDoc */
 anychart.sankeyModule.elements.VisualElement.prototype.serialize = function() {
@@ -164,6 +207,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.serialize = function() {
 /** @inheritDoc */
 anychart.sankeyModule.elements.VisualElement.prototype.setupByJSON = function(config, opt_default) {
   anychart.sankeyModule.elements.VisualElement.base(this, 'setupByJSON', config, opt_default);
+
   if ('tooltip' in config)
     this.tooltip().setupInternal(!!opt_default, config['tooltip']);
 

@@ -15,7 +15,14 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
       'normal': {
         'fill': anychart.core.defaultTheme.returnSourceColor,
         'stroke': function() {
-          return this['conflict'] ? '2 red' : anychart.core.defaultTheme.returnDarkenSourceColor;
+          return this['conflict'] ? '2 red' : 'none';
+        },
+        'labels': {
+          'enabled': true,
+          'format': '{%name}',
+          'fontColor': 'black',
+          'fontSize': 14,
+          'disablePointerEvents': true
         }
       },
       'hovered': {
@@ -26,10 +33,19 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
     'flow': {
       'normal': {
         'fill': anychart.core.defaultTheme.returnSourceColor50,
-        'stroke': 'none'
+        'stroke': 'none',
+        'labels': {
+          'enabled': false,
+          'disablePointerEvents': true,
+          'fontColor': '#000',
+          'padding': 0
+        }
       },
       'hovered': {
-        'fill': anychart.core.defaultTheme.returnDarkenSourceColor
+        'fill': anychart.core.defaultTheme.returnDarkenSourceColor,
+        'labels': {
+          'enabled': true
+        }
       }
     },
 
@@ -42,7 +58,18 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
             {'color': 'white', 'offset': 1}
           ]
         },
-        'stroke': 'none'
+        'stroke': 'none',
+        'labels': {
+          'enabled': false,
+          'disablePointerEvents': true,
+          'fontColor': '#000',
+          'padding': 0
+        }
+      },
+      'hovered': {
+        'labels': {
+          'enabled': true
+        }
       }
     }
   }
