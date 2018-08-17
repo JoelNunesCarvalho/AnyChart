@@ -338,6 +338,7 @@ anychart.math.isPointOnLine = function(p1x, p1y, p2x, p2y, p3x, p3y) {
  * @return {boolean}
  */
 anychart.math.checkRectIntersectionWithSegment = function(x1, y1, x2, y2, opt_rect) {
+  debugger;
   var result = false, k, k1, i, len;
   if (!opt_rect) return false;
 

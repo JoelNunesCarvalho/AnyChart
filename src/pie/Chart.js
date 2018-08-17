@@ -2574,14 +2574,17 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
 
 
 anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
+  console.log('calc overlap');
   var iterator = this.getIterator();
   var mainFactory = this.labels();
   var mode3d = /** @type {boolean} */ (this.getOption('mode3d'));
   var isNotForceHoverLabels = !this.getOption('forceHoverLabels');
-  var start = /** @type {number} */ (iterator.meta('start'));
-  var sweep = /** @type {number} */ (iterator.meta('sweep'));
   var cx = this.cx;
   var cy = this.cy;
+
+  if (!this['c' + index])
+    this['c' + index] = this.container().circle(cx, cy, 2).fill('red').stroke('black').zIndex(1000);
+  this['c' + index].center({x: cx, y: cy});
 
   iterator.reset();
   while (iterator.advance()) {
@@ -2595,6 +2598,9 @@ anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
     if (label) {
       var isFitToSlice = true;
       if ((isNormalState || (!isNormalState && isNotForceHoverLabels))) {
+        var start = /** @type {number} */ (iterator.meta('start'));
+        var sweep = /** @type {number} */ (iterator.meta('sweep'));
+
         var angle;
         var explode = this.getExplode(pointState);
         if (explode) {
@@ -2613,17 +2619,25 @@ anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
         var bx = cx + this.radiusValue_ * Math.cos(angle);
         var by = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
 
-        var bounds = label.bounds_;
+        var bounds = label.bounds_.toCoordinateBox();
 
-        // if (!this['labelBounds' + index])
-        //   this['labelBounds' + index] = this.container().rect().fill('none').stroke('red').zIndex(1000);
-        // this['labelBounds' + index].setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+        if (!this['a' + index])
+          this['a' + index] = this.container().circle(ax, ay, 4).fill('black .2').stroke('black').zIndex(1000);
+        this['a' + index].center({x: ax, y: ay});
+
+        if (!this['b' + index])
+          this['b' + index] = this.container().circle(bx, by, 2).fill('red .2').stroke('black').zIndex(1000);
+        this['b' + index].center({x: bx, y: by});
+
+        if (!this['labelBounds' + index])
+          this['labelBounds' + index] = this.container().rect().fill('none').stroke('red').zIndex(1000);
+        this['labelBounds' + index].setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
         var singlePiePoint = ((iterator.getRowsCount() == 1 || sweep == 360) && !this.innerRadiusValue_);
         var notIntersectStartLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(ax, ay, cx, cy, bounds);
         var notIntersectEndLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(cx, cy, bx, by, bounds);
         var notIntersectPieOuterRadius = !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.radiusValue_, bounds);
-        var notIntersectPieInnerRadius = singlePiePoint || !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.innerRadiusValue_, bounds);
+        var notIntersectPieInnerRadius = singlePiePoint || anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.innerRadiusValue_, bounds);
 
         isFitToSlice = notIntersectStartLine && notIntersectEndLine && notIntersectPieOuterRadius && notIntersectPieInnerRadius;
       }
