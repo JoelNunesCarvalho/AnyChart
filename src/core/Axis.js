@@ -813,7 +813,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
     var overlappedMinorLabels = [];
 
     if (scale) {
-      var i, j;
+      var i, j, len;
 
       /**
        * Index of previous major label which is displayed.
@@ -844,9 +844,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
           this.insideBounds_ : null;
       var isLabelInInsideSpace;
 
-      debugger
-
-      for (var i = 0, len = ticksArrLen; i < len; i++) {
+      for (i = 0, len = ticksArrLen; i < len; i++) {
         this.getLabel(i, true, scaleTicksArr, opt_bounds)
       }
 

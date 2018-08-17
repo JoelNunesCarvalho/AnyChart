@@ -2200,6 +2200,10 @@ anychart.pieModule.Chart.prototype.drawContent = function(bounds) {
           var hovered = this.state.isStateContains(pointState, anychart.PointState.HOVER);
           this.drawLabel_(pointState, hovered);
         }
+        this.labels().draw();
+        if (this.getOption('overlapMode') != anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP) {
+          this.calcLabelsOverlap();
+        }
       }
     }
 
@@ -2527,8 +2531,6 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
   var positionProvider = this.createPositionProvider();
   var formatProvider = this.createFormatProvider(true);
 
-  var mode3d = /** @type {boolean} */ (this.getOption('mode3d'));
-
   var isNotNormalState = hovered || selected;
 
   var isDraw = isNotNormalState ?
@@ -2564,54 +2566,73 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
         label.container().parent(/** @type {acgraph.vector.ILayer} */(mainFactory.container()));
       }
     }
-
-    var isFitToSlice = true;
-    if ((!isNotNormalState || (isNotNormalState && !this.getOption('forceHoverLabels'))) && this.getOption('overlapMode') != anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP) {
-      var start = /** @type {number} */ (iterator.meta('start'));
-      var sweep = /** @type {number} */ (iterator.meta('sweep'));
-
-      var cx = this.cx;
-      var cy = this.cy;
-
-      var angle;
-      var explode = this.getExplode(pointState);
-      if (explode) {
-        angle = (start + sweep / 2) * Math.PI / 180;
-        var ex = explode * Math.cos(angle);
-        var ey = (mode3d ? this.get3DYRadius(explode) : explode) * Math.sin(angle);
-        cx += ex;
-        cy += ey;
-      }
-
-      angle = start * Math.PI / 180;
-      var ax = cx + this.radiusValue_ * Math.cos(angle);
-      var ay = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
-
-      angle = (start + sweep) * Math.PI / 180;
-      var bx = cx + this.radiusValue_ * Math.cos(angle);
-      var by = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
-
-      label.firstDraw();
-      var bounds = label.textElement.getBounds();
-      // console.log(bounds);
-
-      var singlePiePoint = ((iterator.getRowsCount() == 1 || sweep == 360) && !this.innerRadiusValue_);
-      var notIntersectStartLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(ax, ay, cx, cy, bounds);
-      var notIntersectEndLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(cx, cy, bx, by, bounds);
-      var notIntersectPieOuterRadius = !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.radiusValue_, bounds);
-      var notIntersectPieInnerRadius = singlePiePoint || anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.innerRadiusValue_, bounds);
-
-      isFitToSlice = notIntersectStartLine && notIntersectEndLine && notIntersectPieOuterRadius && notIntersectPieInnerRadius;
-    }
-
-    if (!isFitToSlice) {
-      mainFactory.clear(index);
-    }
-
   } else if (label) {
     mainFactory.clear(label.getIndex());
   }
   return /** @type {anychart.core.ui.CircularLabelsFactory.Label}*/(label);
+};
+
+
+anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
+  var iterator = this.getIterator();
+  var mainFactory = this.labels();
+  var mode3d = /** @type {boolean} */ (this.getOption('mode3d'));
+  var isNotForceHoverLabels = !this.getOption('forceHoverLabels');
+  var start = /** @type {number} */ (iterator.meta('start'));
+  var sweep = /** @type {number} */ (iterator.meta('sweep'));
+  var cx = this.cx;
+  var cy = this.cy;
+
+  iterator.reset();
+  while (iterator.advance()) {
+    var pointState = this.state.getPointStateByIndex(iterator.getIndex());
+    var hovered = pointState == anychart.PointState.HOVER;
+    var selected = pointState == anychart.PointState.SELECT;
+    var isNormalState = !(hovered || selected);
+
+    var index = iterator.getIndex();
+    var label = this.labels().getLabel(index);
+    if (label) {
+      var isFitToSlice = true;
+      if ((isNormalState || (!isNormalState && isNotForceHoverLabels))) {
+        var angle;
+        var explode = this.getExplode(pointState);
+        if (explode) {
+          angle = (start + sweep / 2) * Math.PI / 180;
+          var ex = explode * Math.cos(angle);
+          var ey = (mode3d ? this.get3DYRadius(explode) : explode) * Math.sin(angle);
+          cx += ex;
+          cy += ey;
+        }
+
+        angle = start * Math.PI / 180;
+        var ax = cx + this.radiusValue_ * Math.cos(angle);
+        var ay = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
+
+        angle = (start + sweep) * Math.PI / 180;
+        var bx = cx + this.radiusValue_ * Math.cos(angle);
+        var by = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
+
+        var bounds = label.bounds_;
+
+        // if (!this['labelBounds' + index])
+        //   this['labelBounds' + index] = this.container().rect().fill('none').stroke('red').zIndex(1000);
+        // this['labelBounds' + index].setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+
+        var singlePiePoint = ((iterator.getRowsCount() == 1 || sweep == 360) && !this.innerRadiusValue_);
+        var notIntersectStartLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(ax, ay, cx, cy, bounds);
+        var notIntersectEndLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(cx, cy, bx, by, bounds);
+        var notIntersectPieOuterRadius = !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.radiusValue_, bounds);
+        var notIntersectPieInnerRadius = singlePiePoint || !anychart.math.checkForRectIsOutOfCircleBounds(cx, cy, this.innerRadiusValue_, bounds);
+
+        isFitToSlice = notIntersectStartLine && notIntersectEndLine && notIntersectPieOuterRadius && notIntersectPieInnerRadius;
+      }
+
+      if (!isFitToSlice) {
+        mainFactory.clear(index);
+      }
+    }
+  }
 };
 
 

@@ -2214,13 +2214,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   bounds.left = position.x;
   bounds.top = position.y;
 
-  if (!this.anchPoint)
-    this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
-  this.anchPoint.center({x: position.x, y: position.y});
-
-  if (!this.labelBounds)
-    this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
-  this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+  // if (!this.anchPoint)
+  //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
+  // this.anchPoint.center({x: position.x, y: position.y});
+  //
+  // if (!this.labelBounds)
+  //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
+  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
   if (this.isComplex) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));

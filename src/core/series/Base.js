@@ -2552,23 +2552,12 @@ anychart.core.series.Base.prototype.drawSingleFactoryElement = function(factorie
     settings.unshift(label);
     this.setupLabelDrawingPlan.apply(this, settings);
 
-    var anchor = label.getFinalSettings('anchor');
     label.autoVertical(/** @type {boolean} */ (this.getOption('isVertical')));
-    if (goog.isDef(opt_position) && anchor == anychart.enums.Anchor.AUTO) {
-      label.autoAnchor(this.resolveAutoAnchor(opt_position, Number(label.getFinalSettings('rotation')) || 0));
-      this.checkBoundsCollision(/** @type {anychart.core.ui.LabelsFactory} */(mainFactory), label);
-    }
-
-    var textEl = label.textElement;
-    if (!label.textElement) {
-      textEl = label.getTextElement();
-      var measurementNode = acgraph.getRenderer().createMeasurement();
-      textEl.renderTo(measurementNode);
-    }
-    var mergedSettings = label.getMergedSettings();
-    var text = mainFactory.callFormat(mergedSettings['format'], formatProvider, index);
-    textEl.text(goog.isDef(text) ? String(text) : '');
-    label.applyTextSettings(textEl, true, mergedSettings);
+    // var anchor = label.getFinalSettings('anchor');
+    // if (goog.isDef(opt_position) && anchor == anychart.enums.Anchor.AUTO) {
+    //   label.autoAnchor(this.resolveAutoAnchor(opt_position, Number(label.getFinalSettings('rotation')) || 0));
+    //   this.checkBoundsCollision(/** @type {anychart.core.ui.LabelsFactory} */(mainFactory), label);
+    // }
   } else {
     var currentFactory = /** @type {anychart.core.ui.MarkersFactory} */(factories[1] || mainFactory);
     var iterator = this.getIterator();
