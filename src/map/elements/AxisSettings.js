@@ -20,6 +20,8 @@ goog.require('anychart.mapModule.elements.AxisTicks');
 anychart.mapModule.elements.AxisSettings = function(map) {
   anychart.mapModule.elements.AxisSettings.base(this, 'constructor');
 
+  this.addThemes(anychart.themes.DefaultThemes['map.axisSettings']);
+
   /**
    * Map.
    * @private
@@ -309,6 +311,8 @@ anychart.mapModule.elements.AxisSettings.prototype.title = function(opt_value) {
     this.title_.listenSignals(this.titleInvalidated_, this);
     this.title_.markConsistent(anychart.ConsistencyState.ALL);
     this.registerDisposable(this.title_);
+
+    this.setupCreated('title', this.title_);
   }
 
   if (goog.isDef(opt_value)) {

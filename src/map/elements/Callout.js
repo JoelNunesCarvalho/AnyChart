@@ -366,6 +366,9 @@ anychart.mapModule.elements.Callout.prototype.title = function(opt_value) {
     this.title_ = new anychart.core.ui.Title();
     this.title_.listenSignals(this.titleInvalidated_, this);
     this.registerDisposable(this.title_);
+
+    // todo: (chernetsky) Remove this when Callout is refactored
+    this.title_.resetThemeSettings();
   }
 
   if (goog.isDef(opt_value)) {

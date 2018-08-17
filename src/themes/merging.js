@@ -21,6 +21,8 @@ anychart.themes.merging.compileTheme = function(theme, path, themeIndex) {
   if (needsCompilation) {
     descriptor.compiledIn = themeIndex + 1;
     var requires = descriptor.requires;
+    // if (requires.length)
+    //  console.log(path, "requires", requires);
     for (var i = 0; i < requires.length; i++) {
       var req = requires[i];
       // ensure the default object is merged first
@@ -2086,4 +2088,26 @@ anychart.themes.merging.typedEntities_ = {
     defaults: 'defaultAnnotationSettings',
     typeDescriptor: 'type'
   }
+};
+
+
+/**
+ * Default themes map for child entities that are using in lazy setup system
+ *
+ * @type {Object}
+ */
+anychart.themes.DefaultThemes = {
+  'title': ['defaultFontSettings', 'defaultTitle'],
+  'background': ['defaultBackground'],
+  'legend': ['defaultFontSettings', 'defaultLegend'],
+  'legendItem': ['defaultFontSettings'],
+  'paginator': ['defaultFontSettings'],
+  'separator': ['defaultSeparator'],
+  'tooltip': ['defaultFontSettings', 'defaultTooltip'],
+  'labelsFactory': ['defaultLabelFactory'],
+  'cartesianBase': ['cartesianBase', 'cartesianBase.defaultSeriesSettings.base'/* <--? */],
+  'seriesBase': ['chart.defaultSeriesSettings'],
+  'seriesCartesian': ['cartesianBase.defaultSeriesSettings.base'],
+  'axis': ['defaultAxis'],
+  'map.axisSettings': ['map.axesSettings']
 };

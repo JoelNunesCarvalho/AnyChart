@@ -511,6 +511,35 @@ anychart.core.Base = function() {
   this.needsForceSignalsDispatching_ = false;
 
   /**
+   * Themes chain for current instances in order from less specific to more specific.
+   * 
+   * Can contain strings (names in defaultTheme objects, for example 'title' or 'chart.title')
+   * of theme objects.
+   * 
+   * @type {Array.<Object|string>}
+   * @private
+   */
+  this.themes_ = [];
+
+
+  /**
+   * Map for all getter instances states in format:
+   * {
+   *   'getterName1': {
+   *     'themes': ['theme1', 'theme2'],
+   *     'enabled': boolean,
+   *     'instance': null|anychart.core.Base
+   *   }
+   * }
+   *
+   * This map is used to check if instance should be created or it already exists.
+   *
+   * @type {Object}
+   * @private
+   */
+  this.createdMap_ = {};
+
+  /**
    * Consistency storage map.
    * Please see type definition for more information.
    * @type {anychart.ConsistencyStorage}
@@ -1149,6 +1178,220 @@ anychart.core.Base.prototype.setupSpecial = function(isDefault, var_args) {
   return false;
 };
 
+
+//region --- Theme Map Processing
+//------------------------------------------------------------------------------
+//
+//  Theme Map Processing
+//
+//------------------------------------------------------------------------------
+/**
+ * Add theme or multiple themes to instance themes chain.
+ *
+ * Must be ordered like this.addThemes('chartDefault', 'pieDefault', 'myCustomPie')
+ * from basic (less specific) theme to very specific.
+ *
+ * @param {...(Object|string)} var_args Themes as string names (keys) from defaultTheme object, or json settings objects.
+ */
+anychart.core.Base.prototype.addThemes = function(var_args) {
+  if (arguments.length == 1 && goog.isArray(arguments[0])) {
+    this.addThemes.apply(this, arguments[0]);
+  } else {
+    for (var i = 0; i < arguments.length; i++) {
+      var th = arguments[i];
+      if (th && (!goog.isString(th) || this.themes_.indexOf(/** @type {string} */(th)) === -1))
+        this.themes_.push(th);
+    }
+    this.flattenThemes();
+  }
+};
+
+
+/**
+ * Returns themes chain of current instance.
+ *
+ * @return {Array.<string|Object>}
+ */
+anychart.core.Base.prototype.getThemes = function() {
+  return this.themes_;
+};
+
+
+/**
+ * Creates array withe themes that are sub-themes of parent's themes.
+ *
+ * Example:
+ * calling this.addExtendedThemes(['chart', 'pieFunnelBase', 'pie'], 'title')
+ * will add such themes ['chart.title', 'pieFunnelBase.title', 'pie.title']
+ *
+ * This works with objects too.
+ *
+ * calling this.addExtendedThemes([{'a': 'A', 'title': {'fontColor': 'red'}}], 'title')
+ * will add such themes [{'fontColor': 'red'}]
+ *
+ * @param {Array.<string|Object>} sourceThemes Parent themes to be used as base themes
+ * @param {string} extendThemeName Sub-theme name
+ * @return {Array.<string|Object>} Extended themes
+ */
+anychart.core.Base.prototype.createExtendedThemes = function(sourceThemes, extendThemeName) {
+  var resultThemes = [];
+  for (var i = 0; i < sourceThemes.length; i++) {
+    var th = sourceThemes[i];
+    if (th) {
+      if (goog.isString(th)) {
+        resultThemes.push(th + '.' + extendThemeName);
+      } else if (goog.isDef(th[extendThemeName])) {
+        var objClone = goog.object.clone(th[extendThemeName]);
+        resultThemes.push(objClone);
+      }
+    }
+  }
+  return resultThemes;
+};
+
+
+/**
+ * Creates simply merged (not recursively) json setting object
+ * from instance themes chain and saves it as themeSettings
+ */
+anychart.core.Base.prototype.flattenThemes = function() {
+  var flatTheme = {};
+  var baseThemes = anychart.getThemes();
+
+  for (var i = 0; i < this.themes_.length; i++) {
+    var theme = this.themes_[i];
+    if (goog.isString(theme)) {
+      var splitPath = theme.split('.');
+
+      for (var t = 0; t < baseThemes.length; t++) {
+        theme = baseThemes[t];
+        for (var j = 0; j < splitPath.length; j++) {
+          if (theme) {
+            var part = splitPath[j];
+            theme = theme[part];
+          }
+        }
+        if (theme)
+          goog.mixin(flatTheme, theme);
+      }
+    } else if (goog.isObject(theme))
+      goog.mixin(flatTheme, theme);
+  }
+  this.themeSettings = flatTheme;
+};
+
+
+/**
+ * Returns flat theme
+ *
+ * @param {string=} opt_root Sub-theme name
+ * @return {!Object} json object
+ */
+anychart.core.Base.prototype.getThemeSettings = function(opt_root) {
+  return goog.isDef(opt_root) ? this.themeSettings[opt_root] : this.themeSettings;
+};
+
+
+/**
+ * todo: Temporary method for themes optimization and lazy setup refactoring sake. Remove when it's done.
+ */
+anychart.core.Base.prototype.resetThemeSettings = function() {
+  this.themeSettings = {};
+};
+
+
+/**
+ * Special getter for inner usage to get any child entity, that can be get by api getters.
+ * Should be used instead of using api getters for performance purpose.
+ *
+ * Checks if entity instance is enabled by theme and should be created, creates instance by calling it's api getter and returns this instance.
+ * Otherwise returns false.
+ *
+ * @param {string} getterName Name of the getter function
+ * @param {boolean=} opt_ignoreEnabled Ignore enabled field
+ * @param {Function=} opt_getterFunction
+ * @return {boolean|anychart.core.Base|undefined}
+ */
+anychart.core.Base.prototype.getCreated = function(getterName, opt_ignoreEnabled, opt_getterFunction) {
+  if (!goog.isDef(this.createdMap_[getterName]))
+    this.createdMap_[getterName] = {themes: anychart.themes.DefaultThemes[getterName]};
+
+  if (this.createdMap_[getterName].instance)
+    return this.createdMap_[getterName].instance;
+
+  if (goog.isDef(this.createdMap_[getterName].enabled))
+    return this.createdMap_[getterName].enabled;
+
+  // Check if entity is enabled by default theme
+  var themes = this.createdMap_[getterName].themes ? goog.array.clone(this.createdMap_[getterName].themes) : [];
+  var extendedThemes = this.createExtendedThemes(this.getThemes(), getterName);
+  themes.push.apply(themes, extendedThemes);
+
+  if (opt_ignoreEnabled) {
+    this.setCreated(getterName, opt_getterFunction);
+    return this.createdMap_[getterName].instance;
+
+  } else {
+    var baseThemes = anychart.getThemes();
+    for (var i = themes.length; i--;) {
+      var theme = themes[i];
+      if (goog.isString(theme)) {
+        var splitPath = theme.split('.');
+        for (var t = baseThemes.length; t--;) {
+          theme = baseThemes[t];
+          for (var j = 0; j < splitPath.length; j++) {
+            if (theme) {
+              var part = splitPath[j];
+              theme = theme[part];
+            }
+          }
+          if (theme && goog.isDef(theme['enabled'])) {
+            if (theme['enabled'])
+              this.setCreated(getterName, opt_getterFunction);
+            else
+              this.createdMap_[getterName].enabled = false;
+            return this.createdMap_[getterName].instance;
+          }
+        }
+      }
+    }
+  }
+};
+
+
+/**
+ * Creates instance of child entity by calling its api getter.
+ *
+ * @param {string} getterName Name of the getter function
+ * @param {Function=} opt_getterFunction Getter function if getter is not exported
+ */
+anychart.core.Base.prototype.setCreated = function(getterName, opt_getterFunction) {
+  this.createdMap_[getterName].enabled = true;
+
+  opt_getterFunction = goog.isFunction(opt_getterFunction) ? opt_getterFunction : this[getterName];
+  var instance = /** @type {anychart.core.Base} */(opt_getterFunction.call(this));
+
+  if (!this.createdMap_[getterName].instance) {
+    this.setupCreated(getterName, instance);
+  }
+};
+
+
+/**
+ * Setups created instance of child entity and updates this.createdMap_[getterName]
+ *
+ * @param {string} getterName Name of the getter that creates instance of child entity
+ * @param {anychart.core.Base} instance Child entity instance
+ */
+anychart.core.Base.prototype.setupCreated = function(getterName, instance) {
+  var extendedThemes = this.createExtendedThemes(this.getThemes(), getterName);
+  instance.addThemes(extendedThemes);
+
+  if (!goog.isDef(this.createdMap_[getterName]))
+    this.createdMap_[getterName] = {};
+  this.createdMap_[getterName].instance = instance;
+};
+//endregion
 
 /**
  * Dispatches external event with a timeout to detach it from the other code execution frame.

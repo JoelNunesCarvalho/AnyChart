@@ -42,6 +42,8 @@ anychart.core.Axis = function() {
   this.suspendSignalsDispatching();
   anychart.core.Axis.base(this, 'constructor');
 
+  this.addThemes(anychart.themes.DefaultThemes['axis']);
+
   this.labelsBounds_ = [];
   this.minorLabelsBounds_ = [];
 
@@ -281,6 +283,8 @@ anychart.core.Axis.prototype.title = function(opt_value) {
     this.title_.setParentEventTarget(this);
     this.title_.listenSignals(this.titleInvalidated_, this);
     this.registerDisposable(this.title_);
+
+    this.setupCreated('title', this.title_);
   }
 
   if (goog.isDef(opt_value)) {
@@ -2490,7 +2494,7 @@ anychart.core.Axis.prototype.setupByJSON = function(config, opt_default) {
   anychart.core.Axis.base(this, 'setupByJSON', config, opt_default);
 
   if ('title' in config)
-    this.title(config['title']);
+    this.title().setupInternal(!!opt_default, config['title']);
 
   this.themeSettings['labels'] = config['labels'];
   this.labels().setupInternal(!!opt_default, config['labels']);

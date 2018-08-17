@@ -335,6 +335,9 @@ anychart.mapModule.elements.Axis.prototype.title = function(opt_value) {
     this.title_.parent(/** @type {anychart.core.ui.Title} */(this.parent().title()));
     this.title_.listenSignals(this.titleInvalidated_, this);
     this.registerDisposable(this.title_);
+
+    // todo: (chernetsky) Remove this when mapModule.elements.Axis is refactored
+    this.title_.resetThemeSettings();
   }
 
   if (goog.isDef(opt_value)) {

@@ -42,6 +42,9 @@ goog.require('goog.labs.userAgent.device');
  */
 anychart.pieModule.Chart = function(opt_data, opt_csvSettings) {
   anychart.pieModule.Chart.base(this, 'constructor');
+
+  this.addThemes('pieFunnelPyramidBase', 'pie');
+
   this.suspendSignalsDispatching();
 
   /**

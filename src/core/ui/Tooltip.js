@@ -33,6 +33,8 @@ goog.require('goog.object');
 anychart.core.ui.Tooltip = function(capability) {
   anychart.core.ui.Tooltip.base(this, 'constructor');
 
+  //this.addThemes(anychart.merging.DefaultThemes['tooltip']);
+
   delete this.themeSettings['enabled'];
 
   /**
@@ -459,6 +461,9 @@ anychart.core.ui.Tooltip.prototype.background = function(opt_value) {
     this.background_.listenSignals(this.backgroundInvalidated_, this);
     this.background_.setParentEventTarget(this);
     this.registerDisposable(this.background_);
+
+    // todo: (chernetsky) Remove this when tooltip is refactored
+    this.background_.resetThemeSettings();
   }
 
   if (goog.isDef(opt_value)) {
@@ -493,6 +498,9 @@ anychart.core.ui.Tooltip.prototype.title = function(opt_value) {
     this.title_.listenSignals(this.onTitleSignal_, this);
     this.title_.setParentEventTarget(this);
     this.registerDisposable(this.title_);
+
+    // todo: (chernetsky) Remove this when tooltip is refactored
+    this.title_.resetThemeSettings();
   }
 
   if (goog.isDef(opt_value)) {

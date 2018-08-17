@@ -54,6 +54,8 @@ anychart.core.Chart = function() {
   this.suspendSignalsDispatching();
   anychart.core.Chart.base(this, 'constructor');
 
+  this.addThemes('chart');
+
   /**
    * @type {acgraph.vector.Layer}
    * @protected
@@ -493,6 +495,8 @@ anychart.core.Chart.prototype.background = function(opt_value) {
     this.background_ = new anychart.core.ui.Background();
     this.background_.listenSignals(this.backgroundInvalidated_, this);
     this.registerDisposable(this.background_);
+
+    this.setupCreated('background', this.background_);
   }
 
   if (goog.isDef(opt_value)) {
@@ -535,6 +539,8 @@ anychart.core.Chart.prototype.title = function(opt_value) {
     this.title_.setParentEventTarget(this);
     this.title_.listenSignals(this.onTitleSignal_, this);
     this.registerDisposable(this.title_);
+
+    this.setupCreated('title', this.title_);
   }
 
   if (goog.isDef(opt_value)) {

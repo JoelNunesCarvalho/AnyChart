@@ -27,6 +27,8 @@ goog.require('anychart.themes.merging');
 anychart.heatmapModule.Chart = function(opt_data, opt_csvSettings) {
   anychart.heatmapModule.Chart.base(this, 'constructor', false);
 
+  this.addThemes('heatMap');
+
   /**
    * Zoom settings.
    * @type {anychart.core.utils.OrdinalZoom}

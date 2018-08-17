@@ -626,6 +626,9 @@ anychart.core.StateSettings.prototype.background = function(opt_value) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.BACKGROUND_AFTER_INIT_CALLBACK)) || anychart.core.StateSettings.DEFAULT_BACKGROUND_AFTER_INIT_CALLBACK;
     this.background_ = new anychart.core.ui.Background();
     afterInitCallback.call(this.stateHolder, this.background_);
+
+    // todo: (chernetsky) Remove this when StateSettings is refactored
+    this.background_.resetThemeSettings();
   }
 
   if (goog.isDef(opt_value)) {

@@ -35,6 +35,8 @@ goog.require('goog.string');
 anychart.vennModule.Chart = function(opt_data, opt_csvSettings) {
   anychart.vennModule.Chart.base(this, 'constructor');
 
+  this.addThemes('venn');
+
   /**
    * @type {anychart.data.Iterator}
    * @private
