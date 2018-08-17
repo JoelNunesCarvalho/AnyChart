@@ -426,6 +426,9 @@ anychart.core.ui.Tooltip.prototype.padding = function(opt_spaceOrTopOrTopAndBott
     this.padding_ = new anychart.core.utils.Padding();
     this.padding_.listenSignals(this.onPaddingSignal_, this);
     this.registerDisposable(this.padding_);
+
+    if (this.getThemes().length)
+      this.setupCreated('padding', this.padding_);
   }
 
   if (goog.isDef(opt_spaceOrTopOrTopAndBottom)) {
@@ -462,8 +465,11 @@ anychart.core.ui.Tooltip.prototype.background = function(opt_value) {
     this.background_.setParentEventTarget(this);
     this.registerDisposable(this.background_);
 
-    // todo: (chernetsky) Remove this when tooltip is refactored
-    this.background_.resetThemeSettings();
+    // todo: (chernetsky) Update this when tooltip is refactored
+    if (this.getThemes().length)
+      this.setupCreated('background', this.background_);
+    else
+      this.background_.themeSettings = {};
   }
 
   if (goog.isDef(opt_value)) {
@@ -499,8 +505,11 @@ anychart.core.ui.Tooltip.prototype.title = function(opt_value) {
     this.title_.setParentEventTarget(this);
     this.registerDisposable(this.title_);
 
-    // todo: (chernetsky) Remove this when tooltip is refactored
-    this.title_.resetThemeSettings();
+    // todo: (chernetsky) Update this when tooltip is refactored
+    if (this.getThemes().length)
+      this.setupCreated('title', this.title_);
+    else
+      this.title_.themeSettings = {};
   }
 
   if (goog.isDef(opt_value)) {
@@ -538,6 +547,10 @@ anychart.core.ui.Tooltip.prototype.separator = function(opt_value) {
     this.separator_.listenSignals(this.onSeparatorSignal_, this);
     this.separator_.setParentEventTarget(this);
     this.registerDisposable(this.separator_);
+
+    // todo: (chernetsky) Update this when tooltip is refactored
+    if (this.getThemes().length)
+      this.setupCreated('separator', this.separator_);
   }
 
   if (goog.isDef(opt_value)) {
@@ -1255,6 +1268,9 @@ anychart.core.ui.Tooltip.prototype.contentInternal = function(opt_value) {
     //TODO (A.Kudryavtsev): Can't avoid it because width_ and height_ values are hardcoded in LabelsBase.
     this.content_.width('100%').height('100%');
     this.registerDisposable(this.content_);
+
+    if (this.getThemes().length)
+      this.setupCreated('contentInternal', this.content_);
   }
 
   if (goog.isDef(opt_value)) {

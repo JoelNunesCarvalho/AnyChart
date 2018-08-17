@@ -413,6 +413,7 @@ anychart.core.StateSettings.prototype.labels = function(opt_value) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.LABELS_AFTER_INIT_CALLBACK)) || goog.nullFunction;
     this.labels_ = labelsFactoryConstructor();
     this.labels_.supportsEnabledSuspension = false;
+    this.setupCreated('labels', this.labels_);
     afterInitCallback.call(this.stateHolder, this.labels_);
   }
 
@@ -437,6 +438,7 @@ anychart.core.StateSettings.prototype.minLabels = function(opt_value) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.LABELS_AFTER_INIT_CALLBACK)) || goog.nullFunction;
     this.minLabels_ = labelsFactoryConstructor();
     this.minLabels_.supportsEnabledSuspension = false;
+    this.setupCreated('minLabels', this.minLabels_);
     afterInitCallback.call(this.stateHolder, this.minLabels_);
     this.minLabels_.markConsistent(anychart.ConsistencyState.ALL);
   }
@@ -462,6 +464,7 @@ anychart.core.StateSettings.prototype.maxLabels = function(opt_value) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.LABELS_AFTER_INIT_CALLBACK)) || goog.nullFunction;
     this.maxLabels_ = labelsFactoryConstructor();
     this.maxLabels_.supportsEnabledSuspension = false;
+    this.setupCreated('maxLabels', this.maxLabels_);
     afterInitCallback.call(this.stateHolder, this.maxLabels_);
     this.maxLabels_.markConsistent(anychart.ConsistencyState.ALL);
   }
@@ -485,6 +488,7 @@ anychart.core.StateSettings.prototype.headers = function(opt_value) {
   if (!this.headers_) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.HEADERS_AFTER_INIT_CALLBACK)) || anychart.core.StateSettings.DEFAULT_HEADERS_AFTER_INIT_CALLBACK;
     this.headers_ = new anychart.core.ui.LabelsFactory();
+    this.setupCreated('headers', this.headers_);
     afterInitCallback.call(this.stateHolder, this.headers_);
   }
 
@@ -517,6 +521,7 @@ anychart.core.StateSettings.prototype.lowerLabels = function(opt_value) {
   if (!this.lowerLabels_) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.LOWER_LABELS_AFTER_INIT_CALLBACK)) || goog.nullFunction;
     this.lowerLabels_ = new anychart.core.ui.LabelsFactory();
+    this.setupCreated('lowerLabels', this.lowerLabels_);
     afterInitCallback.call(this.stateHolder, this.lowerLabels_);
   }
 
@@ -584,6 +589,7 @@ anychart.core.StateSettings.prototype.connector = function(opt_value) {
   if (!this.connector_) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.CONNECTOR_AFTER_INIT_CALLBACK)) || goog.nullFunction;
     this.connector_ = new anychart.core.utils.Connector();
+    this.setupCreated('connector', this.connector_);
     afterInitCallback.call(this.stateHolder, this.connector_);
   }
 
@@ -605,6 +611,7 @@ anychart.core.StateSettings.prototype.outline = function(opt_value) {
     var outlineSettingsConstructor = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.OUTLINE_CONSTRUCTOR)) || anychart.core.StateSettings.DEFAULT_OUTLINE_CONSTRUCTOR;
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.OUTLINE_AFTER_INIT_CALLBACK)) || goog.nullFunction;
     this.outline_ = outlineSettingsConstructor();
+    this.setupCreated('outline', this.outline_);
     afterInitCallback.call(this.stateHolder, this.outline_);
   }
 
@@ -625,10 +632,11 @@ anychart.core.StateSettings.prototype.background = function(opt_value) {
   if (!this.background_) {
     var afterInitCallback = /** @type {Function} */ (this.getOption(anychart.core.StateSettings.BACKGROUND_AFTER_INIT_CALLBACK)) || anychart.core.StateSettings.DEFAULT_BACKGROUND_AFTER_INIT_CALLBACK;
     this.background_ = new anychart.core.ui.Background();
+    this.setupCreated('background', this.background_);
     afterInitCallback.call(this.stateHolder, this.background_);
 
     // todo: (chernetsky) Remove this when StateSettings is refactored
-    this.background_.resetThemeSettings();
+    this.background_.themeSettings = {};
   }
 
   if (goog.isDef(opt_value)) {

@@ -1188,18 +1188,18 @@ anychart.core.Base.prototype.setupSpecial = function(isDefault, var_args) {
 /**
  * Add theme or multiple themes to instance themes chain.
  *
- * Must be ordered like this.addThemes('chartDefault', 'pieDefault', 'myCustomPie')
- * from basic (less specific) theme to very specific.
+ * Must be ordered from basic (less specific) theme to very specific.
+ * Example: this.addThemes('chartDefault', 'pieDefault', 'myCustomPie')
  *
- * @param {...(Object|string)} var_args Themes as string names (keys) from defaultTheme object, or json settings objects.
+ * @param {...(Object|string)|Array.<Object|string>} var_args Themes as string names (keys) from defaultTheme object or json settings objects.
  */
 anychart.core.Base.prototype.addThemes = function(var_args) {
-  if (arguments.length == 1 && goog.isArray(arguments[0])) {
+  if (goog.isArray(arguments[0])) {
     this.addThemes.apply(this, arguments[0]);
   } else {
     for (var i = 0; i < arguments.length; i++) {
       var th = arguments[i];
-      if (th && (!goog.isString(th) || this.themes_.indexOf(/** @type {string} */(th)) === -1))
+      if (goog.isObject(th) || this.themes_.indexOf(/** @type {string} */(th)) == -1)
         this.themes_.push(th);
     }
     this.flattenThemes();
@@ -1218,20 +1218,21 @@ anychart.core.Base.prototype.getThemes = function() {
 
 
 /**
- * Creates array withe themes that are sub-themes of parent's themes.
+ * Creates array with themes that are sub-themes of ancestor's themes.
  *
  * Example:
- * calling this.addExtendedThemes(['chart', 'pieFunnelBase', 'pie'], 'title')
- * will add such themes ['chart.title', 'pieFunnelBase.title', 'pie.title']
  *
- * This works with objects too.
+ * Calling this.addExtendedThemes(['chart', 'pieFunnelBase', 'pie'], 'title')
+ * will return such array of themes ['chart.title', 'pieFunnelBase.title', 'pie.title']
  *
- * calling this.addExtendedThemes([{'a': 'A', 'title': {'fontColor': 'red'}}], 'title')
- * will add such themes [{'fontColor': 'red'}]
+ * This works with objects too:
  *
- * @param {Array.<string|Object>} sourceThemes Parent themes to be used as base themes
- * @param {string} extendThemeName Sub-theme name
- * @return {Array.<string|Object>} Extended themes
+ * Calling this.createExtendedThemes([{'a': 'A', 'title': {'fontColor': 'red'}}, 'pie.legend'], 'title')
+ * will add return such array of themes [{'fontColor': 'red'}, 'pie.legend.title']
+ *
+ * @param {Array.<string|Object>} sourceThemes Ancestor's themes to be used as base themes
+ * @param {string} extendThemeName Name of the sub-theme
+ * @return {Array.<string|Object>} Array of extended themes
  */
 anychart.core.Base.prototype.createExtendedThemes = function(sourceThemes, extendThemeName) {
   var resultThemes = [];
@@ -1246,6 +1247,9 @@ anychart.core.Base.prototype.createExtendedThemes = function(sourceThemes, exten
       }
     }
   }
+  if (resultThemes.length == 0)
+    resultThemes.push(extendThemeName);
+
   return resultThemes;
 };
 
@@ -1282,25 +1286,6 @@ anychart.core.Base.prototype.flattenThemes = function() {
 
 
 /**
- * Returns flat theme
- *
- * @param {string=} opt_root Sub-theme name
- * @return {!Object} json object
- */
-anychart.core.Base.prototype.getThemeSettings = function(opt_root) {
-  return goog.isDef(opt_root) ? this.themeSettings[opt_root] : this.themeSettings;
-};
-
-
-/**
- * todo: Temporary method for themes optimization and lazy setup refactoring sake. Remove when it's done.
- */
-anychart.core.Base.prototype.resetThemeSettings = function() {
-  this.themeSettings = {};
-};
-
-
-/**
  * Special getter for inner usage to get any child entity, that can be get by api getters.
  * Should be used instead of using api getters for performance purpose.
  *
@@ -1310,7 +1295,7 @@ anychart.core.Base.prototype.resetThemeSettings = function() {
  * @param {string} getterName Name of the getter function
  * @param {boolean=} opt_ignoreEnabled Ignore enabled field
  * @param {Function=} opt_getterFunction
- * @return {boolean|anychart.core.Base|undefined}
+ * @return {boolean|anychart.core.Base|null}
  */
 anychart.core.Base.prototype.getCreated = function(getterName, opt_ignoreEnabled, opt_getterFunction) {
   if (!goog.isDef(this.createdMap_[getterName]))
@@ -1350,12 +1335,13 @@ anychart.core.Base.prototype.getCreated = function(getterName, opt_ignoreEnabled
               this.setCreated(getterName, opt_getterFunction);
             else
               this.createdMap_[getterName].enabled = false;
-            return this.createdMap_[getterName].instance;
+            return this.createdMap_[getterName].instance ? this.createdMap_[getterName].instance : null;
           }
         }
       }
     }
   }
+  return null;
 };
 
 
@@ -1392,6 +1378,7 @@ anychart.core.Base.prototype.setupCreated = function(getterName, instance) {
   this.createdMap_[getterName].instance = instance;
 };
 //endregion
+
 
 /**
  * Dispatches external event with a timeout to detach it from the other code execution frame.

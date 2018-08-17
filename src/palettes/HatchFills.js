@@ -12,6 +12,8 @@ goog.require('goog.array');
 anychart.palettes.HatchFills = function() {
   anychart.palettes.HatchFills.base(this, 'constructor');
 
+  this.addThemes('hatchFillPalette');
+
   /**
    * HatchFills palette.
    * @type {Array.<acgraph.vector.HatchFill|acgraph.vector.PatternFill>}

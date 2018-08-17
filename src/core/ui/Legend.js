@@ -545,7 +545,7 @@ anychart.core.ui.Legend.prototype.tooltip = function(opt_value) {
     this.setupCreated('tooltip', this.tooltip_);
 
     // todo: (chernetsky) remove this when tooltip refactored
-    this.tooltip_.setupInternal(true, this.tooltip_.getThemeSettings());
+    this.tooltip_.setupInternal(true, this.tooltip_.themeSettings);
   }
   if (goog.isDef(opt_value)) {
     this.tooltip_.setup(opt_value);
@@ -1484,7 +1484,7 @@ anychart.core.ui.Legend.prototype.clearItems = function() {
  */
 anychart.core.ui.Legend.prototype.createItem = function() {
   var item = new anychart.core.ui.LegendItem();
-  item.addThemes(this.getThemeSettings(), 'defaultFontSettings');
+  item.addThemes(this.themeSettings, 'defaultFontSettings');
   return item;
 };
 
