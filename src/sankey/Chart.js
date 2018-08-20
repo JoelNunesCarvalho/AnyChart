@@ -215,6 +215,17 @@ anychart.sankeyModule.Chart.Node;
  *   from: anychart.sankeyModule.Chart.Node,
  *   to: ?anychart.sankeyModule.Chart.Node,
  *   weight: number,
+ *   left: (number|undefined),
+ *   right: (number|undefined),
+ *   top: (number|undefined),
+ *   bottom: (number|undefined),
+ *   topCenter: (number|undefined),
+ *   bottomCenter: (number|undefined),
+ *   leftTop: ({x: number, y: number}|undefined),
+ *   rightTop: ({x: number, y: number}|undefined),
+ *   rightBottom: ({x: number, y: number}|undefined),
+ *   leftBottom: ({x: number, y: number}|undefined),
+ *   path: (acgraph.vector.Path|undefined),
  *   label: (anychart.core.ui.LabelsFactory.Label|undefined)
  * }}
  */
@@ -565,183 +576,180 @@ anychart.sankeyModule.Chart.prototype.createContextProvider = function(tag) {
 };
 
 
+/**
+ * Labels position for HOVERED state flows.
+ * @param {anychart.sankeyModule.Chart.Flow} flow
+ * @param {string} side
+ * @return {{x: number, y: number}}
+ */
+anychart.sankeyModule.Chart.prototype.hoverNodeFlowsPositionProvider = function(flow, side) {
+  return {
+    'x': flow[side].x,
+    'y': flow[side].y
+  };
+};
+
+
+/**
+ * Labels position for NORMAL state flows.
+ * @param {anychart.sankeyModule.Chart.Flow} flow
+ * @return {{x: number, y: number}}
+ */
+anychart.sankeyModule.Chart.prototype.unhoverNodeFlowsPositionProvider = function(flow) {
+  return {
+    'x': /** @type {number} */ ((flow['left'] + flow['right']) / 2),
+    'y': /** @type {number} */ (flow['topCenter'])
+  };
+};
+
+
+/**
+ * Colors node flows depends on state
+ * @param {Array.<anychart.sankeyModule.Chart.Flow>} flowArray
+ * @param {anychart.enums.Anchor} autoAnchor
+ * @param {anychart.PointState|number} state
+ * @param {Function} positionProviderFn
+ * @param {string=} opt_side
+ */
+anychart.sankeyModule.Chart.prototype.colorNodeFlows = function(flowArray, autoAnchor, state, positionProviderFn, opt_side) {
+  var flow, flowPath;
+  for (var i = 0; i < flowArray.length; i++) {
+    flow = flowArray[i];
+    flowPath = flow.path;
+    this.setFillStroke(this.flow_, /** @type {Object} */ (flowPath.tag), flowPath, state);
+
+    flow.label.autoAnchor(autoAnchor);
+    flow.label.positionProvider({
+      'value': positionProviderFn(flow, opt_side)
+    });
+    this.drawLabel_(this.flow_, flow, state);
+  }
+};
+
+
+/**
+ * Sets fill and stroke depends on context.
+ * @param {anychart.sankeyModule.elements.VisualElement} source
+ * @param {Object} tag
+ * @param {acgraph.vector.Path} path
+ * @param {anychart.PointState|number} state
+ */
+anychart.sankeyModule.Chart.prototype.setFillStroke = function(source, tag, path, state) {
+  var context = this.getColorResolutionContext(tag);
+  var fill = /** @type {acgraph.vector.Fill} */ (source.getFill(state, context));
+  var stroke = /** @type {acgraph.vector.Stroke} */ (source.getStroke(state, context));
+  path.fill(fill);
+  path.stroke(stroke);
+};
+
+
+/**
+ * Colorize node and related flows.
+ * @param {acgraph.vector.Path} path
+ * @param {anychart.PointState|number} state
+ * @param {anychart.enums.Anchor} incomeAutoAnchor Auto anchor for related income flows.
+ * @param {anychart.enums.Anchor} outcomeAutoAnchor Auto anchor for related outcome flows.
+ * @param {Function} positionProviderFn Labels position provider function.
+ */
+anychart.sankeyModule.Chart.prototype.colorizeNode = function(path, state, incomeAutoAnchor, outcomeAutoAnchor, positionProviderFn) {
+  var tag = /** @type {Object} */ (path.tag);
+  // sets <state> state color for node
+  this.setFillStroke(this.node_, tag, path, state);
+
+  // sets <state>> state color for node's income and outcome flows
+  this.colorNodeFlows(tag.node.incomeFlows, incomeAutoAnchor, state, positionProviderFn, 'leftTop');
+  this.colorNodeFlows(tag.node.outcomeFlows, outcomeAutoAnchor, state, positionProviderFn, 'rightTop');
+
+  // draws <state> label for node
+  this.drawLabel_(this.node_, tag.node, state);
+};
+
+
+/**
+ * Colorize flow and related nodes.
+ * @param {acgraph.vector.Path} path
+ * @param {anychart.PointState|number} state
+ */
+anychart.sankeyModule.Chart.prototype.colorizeFlow = function(path, state) {
+  var tag = /** @type {Object} */ (path.tag);
+  // sets <state> state color for flow
+  this.setFillStroke(this.flow_, tag, path, state);
+
+  var flow = tag.flow;
+  flow.label.autoAnchor(anychart.enums.Anchor.CENTER_BOTTOM);
+  flow.label.positionProvider({
+    'value': this.unhoverNodeFlowsPositionProvider(flow)
+  });
+
+  // sets <state> state color for FROM and TO nodes of the flow.
+  this.setFillStroke(this.node_, flow.from.path.tag, flow.from.path, state);
+  this.setFillStroke(this.node_, flow.to.path.tag, flow.to.path, state);
+
+  // draws <state> label for flow
+  this.drawLabel_(this.flow_, flow, state);
+};
+
+
+/**
+ * Colorize dropoff.
+ * @param {acgraph.vector.Path} path
+ * @param {anychart.PointState|number} state
+ */
+anychart.sankeyModule.Chart.prototype.colorizeDropoff = function(path, state) {
+  // draws <state> label for dropoff flow
+  this.drawLabel_(this.dropoff_, path.tag.flow, state);
+};
+
+
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
-  var domTarget = event['domTarget'];
-  var tag = domTarget.tag;
-  var context;
-  var fill, stroke;
+  var domTarget = /** @type {acgraph.vector.Path} */ (event['domTarget']);
+  var tag = /** @type {Object} */ (domTarget.tag);
   var tooltip;
 
   if (tag) {
     var type = tag.type;
-    var flow;
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
-      // node and conflict node
-
       tooltip = this.node_.tooltip();
-      context = this.getColorResolutionContext(tag);
 
-      fill = this.node_.getFill(anychart.PointState.HOVER, context);
-      stroke = this.node_.getStroke(anychart.PointState.HOVER, context);
-      domTarget.fill(fill);
-      domTarget.stroke(stroke);
-
-      var flows = goog.array.concat(tag.node.incomeFlows, tag.node.outcomeFlows);
-      var i;
-      for (i = 0; i < flows.length; i++) {
-        var flowPath = flows[i].path;
-        var flowTag = flowPath.tag;
-        context = this.getColorResolutionContext(flowTag);
-        fill = this.flow_.getFill(anychart.PointState.HOVER, context);
-        stroke = this.flow_.getStroke(anychart.PointState.HOVER, context);
-        flowPath.fill(fill).stroke(stroke);
-      }
-
-      this.drawLabel_(this.node_, tag.node, anychart.PointState.HOVER);
-
-      for (i = 0; i < tag.node.incomeFlows.length; i++) {
-        var incomeFlow = tag.node.incomeFlows[i];
-        incomeFlow.label.autoAnchor(anychart.enums.Anchor.LEFT_BOTTOM);
-        incomeFlow.label.positionProvider({
-          'value': {
-            'x': incomeFlow.leftTop.x,
-            'y': incomeFlow.leftTop.y
-          }
-        });
-        this.drawLabel_(this.flow_, incomeFlow, anychart.PointState.HOVER);
-      }
-
-      for (i = 0; i < tag.node.outcomeFlows.length; i++) {
-        var outcomeFlow = tag.node.outcomeFlows[i];
-        outcomeFlow.label.autoAnchor(anychart.enums.Anchor.RIGHT_BOTTOM);
-        outcomeFlow.label.positionProvider({
-          'value': {
-            'x': outcomeFlow.rightTop.x,
-            'y': outcomeFlow.rightTop.y
-          }
-        });
-        this.drawLabel_(this.flow_, outcomeFlow, anychart.PointState.HOVER);
-      }
-
+      // colorize node and all related flows
+      this.colorizeNode(domTarget, anychart.PointState.HOVER, anychart.enums.Anchor.LEFT_BOTTOM, anychart.enums.Anchor.RIGHT_BOTTOM, this.hoverNodeFlowsPositionProvider);
     } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) {
-      // flow
       tooltip = this.flow_.tooltip();
-      context = this.getColorResolutionContext(tag);
 
-      fill = this.flow_.getFill(anychart.PointState.HOVER, context);
-      stroke = this.flow_.getStroke(anychart.PointState.HOVER, context);
-      domTarget.fill(fill);
-      domTarget.stroke(stroke);
-
-      flow = tag.flow;
-      flow.label.autoAnchor(anychart.enums.Anchor.CENTER_BOTTOM);
-      flow.label.positionProvider({
-        'value': {
-          'x': (flow.left + flow.right) / 2,
-          'y': flow.topCenter
-        }
-      });
-      this.drawLabel_(this.flow_, flow, anychart.PointState.HOVER);
-
-      context = this.getColorResolutionContext(flow.from.path.tag);
-      fill = this.node_.getFill(anychart.PointState.HOVER, context);
-      stroke = this.node_.getStroke(anychart.PointState.HOVER, context);
-      flow.from.path.fill(fill).stroke(stroke);
-
-      context = this.getColorResolutionContext(flow.to.path.tag);
-      fill = this.node_.getFill(anychart.PointState.HOVER, context);
-      stroke = this.node_.getStroke(anychart.PointState.HOVER, context);
-      flow.to.path.fill(fill).stroke(stroke);
-
+      // colorize flow and related nodes(from, to)
+      this.colorizeFlow(domTarget, anychart.PointState.HOVER);
     } else {
-      // dropoff flow
-      this.drawLabel_(this.dropoff_, tag.flow, anychart.PointState.HOVER);
       tooltip = this.dropoff_.tooltip();
+
+      // colorize dropoff flow
+      this.colorizeDropoff(domTarget, anychart.PointState.HOVER);
     }
     tooltip.showFloat(event['clientX'], event['clientY'], this.createContextProvider(/** @type {Object} */ (tag)));
+  } else {
+    this.tooltip().hide();
   }
 };
 
 
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
-  var domTarget = event['domTarget'];
-  var tag = domTarget.tag;
-  var context;
-  var fill, stroke;
+  var domTarget = /** @type {acgraph.vector.Path} */ (event['domTarget']);
+  var tag = /** @type {Object} */ (domTarget.tag);
   this.tooltip().hide();
   if (tag) {
     var type = tag.type;
-    var flow;
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
-      // node and conflict node
-      context = this.getColorResolutionContext(tag);
-      fill = this.node_.getFill(anychart.PointState.NORMAL, context);
-      stroke = this.node_.getStroke(anychart.PointState.NORMAL, context);
-      domTarget.fill(fill);
-      domTarget.stroke(stroke);
-
-      var flows = goog.array.concat(tag.node.incomeFlows, tag.node.outcomeFlows);
-      for (var i = 0; i < flows.length; i++) {
-        var flowPath = flows[i].path;
-        var flowTag = flowPath.tag;
-        context = this.getColorResolutionContext(flowTag);
-        fill = this.flow_.getFill(anychart.PointState.NORMAL, context);
-        stroke = this.flow_.getStroke(anychart.PointState.NORMAL, context);
-        flowPath.fill(fill).stroke(stroke);
-      }
-
-      this.drawLabel_(this.node_, tag.node, anychart.PointState.NORMAL);
-      for (i = 0; i < tag.node.incomeFlows.length; i++) {
-        var incomeFlow = tag.node.incomeFlows[i];
-        incomeFlow.label.autoAnchor(anychart.enums.Anchor.CENTER_BOTTOM);
-        incomeFlow.label.positionProvider({
-          'value': {
-            'x': (incomeFlow.left + incomeFlow.right) / 2,
-            'y': incomeFlow.topCenter
-          }
-        });
-        this.drawLabel_(this.flow_, incomeFlow, anychart.PointState.NORMAL);
-      }
-
-      for (i = 0; i < tag.node.outcomeFlows.length; i++) {
-        var outcomeFlow = tag.node.outcomeFlows[i];
-        outcomeFlow.label.autoAnchor(anychart.enums.Anchor.CENTER_BOTTOM);
-        outcomeFlow.label.positionProvider({
-          'value': {
-            'x': (outcomeFlow.left + outcomeFlow.right) / 2,
-            'y': outcomeFlow.topCenter
-          }
-        });
-        this.drawLabel_(this.flow_, outcomeFlow, anychart.PointState.NORMAL);
-      }
-
+      // colorize node and all related flows
+      this.colorizeNode(domTarget, anychart.PointState.NORMAL, anychart.enums.Anchor.CENTER_BOTTOM, anychart.enums.Anchor.CENTER_BOTTOM, this.unhoverNodeFlowsPositionProvider);
     } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) {
-      // flow
-
-      context = this.getColorResolutionContext(tag);
-      fill = this.flow_.getFill(anychart.PointState.NORMAL, context);
-      stroke = this.flow_.getStroke(anychart.PointState.NORMAL, context);
-      domTarget.fill(fill);
-      domTarget.stroke(stroke);
-
-      flow = tag.flow;
-      this.drawLabel_(this.flow_, flow, anychart.PointState.NORMAL);
-      context = this.getColorResolutionContext(flow.from.path.tag);
-      fill = this.node_.getFill(anychart.PointState.NORMAL, context);
-      stroke = this.node_.getStroke(anychart.PointState.NORMAL, context);
-      flow.from.path.fill(fill).stroke(stroke);
-
-      context = this.getColorResolutionContext(flow.to.path.tag);
-      fill = this.node_.getFill(anychart.PointState.NORMAL, context);
-      stroke = this.node_.getStroke(anychart.PointState.NORMAL, context);
-      flow.to.path.fill(fill).stroke(stroke);
+      // colorize flow and related nodes(from, to)
+      this.colorizeFlow(domTarget, anychart.PointState.NORMAL);
     } else {
-      // dropoff flow
-      this.drawLabel_(this.dropoff_, tag.flow, anychart.PointState.NORMAL);
+      // colorize dropoff flow
+      this.colorizeDropoff(domTarget, anychart.PointState.NORMAL);
     }
   }
 };
@@ -884,7 +892,7 @@ anychart.sankeyModule.Chart.prototype.paletteInvalidated_ = function(event) {
 /**
  * Returns context for color resolution.
  * @param {Object} tag Tag
- * @return {*}
+ * @return {Object}
  */
 anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag) {
   var from, to, node;
@@ -1017,7 +1025,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         var node = level.nodes[j];
         var nodeHeight = node.weight * this.weightAspect;
 
-        var path = this.rootElement.path().zIndex(2);
+        var path = this.rootElement.path();
+        path.zIndex(2);
         this.nodePaths.push(path);
 
         path.tag = {
@@ -1103,7 +1112,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         var fromCoords = fromNode.outcomeCoords[indexFrom];
         var toCoords = toNode.incomeCoords[indexTo];
 
-        path = this.rootElement.path().zIndex(1);
+        path = this.rootElement.path();
+        path.zIndex(1);
 
         path.tag = {
           type: anychart.sankeyModule.Chart.ElementType.FLOW,
@@ -1113,15 +1123,15 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         this.flowPaths.push(path);
         flow.path = path;
 
-        flow.left = fromCoords.x;
-        flow.right = toCoords.x;
+        flow['left'] = fromCoords.x;
+        flow['right'] = toCoords.x;
         flow.top = Math.min(fromCoords.y1, toCoords.y1);    // highest y coordinate
         flow.bottom = Math.max(fromCoords.y2, toCoords.y2); // lowest y coordinate
-        flow.topCenter = (fromCoords.y1 + toCoords.y1) / 2;
+        flow['topCenter'] = (fromCoords.y1 + toCoords.y1) / 2;
         flow.bottomCenter = (fromCoords.y2 + toCoords.y2) / 2;
 
-        flow.leftTop = {x: fromCoords.x, y: fromCoords.y1};
-        flow.rightTop = {x: toCoords.x, y: toCoords.y1};
+        flow['leftTop'] = {x: fromCoords.x, y: fromCoords.y1};
+        flow['rightTop'] = {x: toCoords.x, y: toCoords.y1};
         flow.rightBottom = {x: toCoords.x, y: toCoords.y2};
         flow.leftBottom = {x: fromCoords.x, y: fromCoords.y2};
 
@@ -1135,13 +1145,14 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       } else {
         // dropoff flow
         height = fromNode.dropoffValue * this.weightAspect;
-        var left = fromNode.right;
+        var left = /** @type {number} */ (fromNode.right);
         var radius = Math.min(height, nodeWidth / 4);
         var right = left + radius;
-        var y2 = fromNode.bottom;
+        var y2 = /** @type {number} */ (fromNode.bottom);
         var y1 = y2 - height;
 
-        path = this.rootElement.path().zIndex(1);
+        path = this.rootElement.path();
+        path.zIndex(1);
 
         path.tag = {
           type: anychart.sankeyModule.Chart.ElementType.DROPOFF,
@@ -1247,10 +1258,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       labelsFormatProvider = this.createLabelContextProvider(flow, type, true);
       if (toNode) {
         labelsPositionProvider = {
-          'value': {
-            'x': (flow.left + flow.right) / 2,
-            'y': flow.topCenter
-          }
+          'value': this.unhoverNodeFlowsPositionProvider(flow)
         };
         flow.label = flowLabels.add(labelsFormatProvider, labelsPositionProvider, labelIndex);
         flow.label.autoAnchor(anychart.enums.Anchor.CENTER_BOTTOM);
