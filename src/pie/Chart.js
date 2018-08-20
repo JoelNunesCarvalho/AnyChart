@@ -2574,11 +2574,15 @@ anychart.pieModule.Chart.prototype.drawLabel_ = function(pointState, opt_updateC
 
 
 anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
-  console.log('calc overlap');
   var iterator = this.getDetachedIterator();
   var mainFactory = this.labels();
   var mode3d = /** @type {boolean} */ (this.getOption('mode3d'));
   var isNotForceHoverLabels = !this.getOption('forceHoverLabels');
+  var allowOverlap = this.getOption('overlapMode') == anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP;
+
+  if (allowOverlap)
+    return;
+
   var cx = this.cx;
   var cy = this.cy;
 
@@ -4609,7 +4613,6 @@ anychart.pieModule.Chart.prototype.finalizePointAppearance = function(opt_value)
   } else {
     this.labels().draw();
   }
-  this.calcLabelsOverlap();
 };
 
 

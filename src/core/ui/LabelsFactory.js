@@ -753,16 +753,8 @@ anychart.core.ui.LabelsFactory.prototype.draw = function() {
   if (manualSuspend) stage.suspend();
 
   if (this.labels_) {
-    goog.array.forEach(this.labels_, function(label, index) {
-      label.dropMergedSettings();
-      label.firstDraw();
-    }, this);
-
-    goog.array.forEach(this.labels_, function(label, index) {
-      if (label && label.textElement && !label.isComplexText()) {
-        label.textElement.getBounds();
-      }
-    }, this);
+    this.firstDraw();
+    this.measureLabels();
 
     goog.array.forEach(this.labels_, function(label, index) {
       if (label) {
@@ -786,6 +778,22 @@ anychart.core.ui.LabelsFactory.prototype.draw = function() {
 
   if (manualSuspend) stage.resume();
   return this;
+};
+
+
+anychart.core.ui.LabelsFactory.prototype.firstDraw = function() {
+  goog.array.forEach(this.labels_, function(label, index) {
+    label.firstDraw();
+  }, this);
+};
+
+
+anychart.core.ui.LabelsFactory.prototype.measureLabels = function() {
+  goog.array.forEach(this.labels_, function(label, index) {
+    if (label && label.textElement && !label.isComplexText()) {
+      label.textElement.getBounds();
+    }
+  }, this);
 };
 
 
@@ -2331,6 +2339,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.needChangeDomElement = function()
 
 
 anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
+  this.dropMergedSettings();
   if (!this.isComplexText()) {
     var textElement = this.textElement;
     if (this.needChangeDomElement()) {
