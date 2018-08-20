@@ -1883,20 +1883,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.getFinalSettings = function(value
     });
     return {width: adjustByWidth, height: adjustByHeight};
   } else {
-    var finalSetting = this.resolveSetting_(value);
-    // var enabled = finalSetting && goog.isDef(finalSetting['enabled']) ? finalSetting['enabled'] : true;
-
-    var result;
-    // if (value == 'padding' && enabled) {
-    //   result = new anychart.core.utils.Padding();
-    //   result.setup(finalSetting);
-    // } else if (value == 'background' && enabled) {
-    //   result = new anychart.core.ui.Background();
-    //   result.setup(finalSetting);
-    // } else {
-    result = finalSetting;
-    // }
-    return result;
+    return this.resolveSetting_(value);
   }
 };
 
@@ -2215,13 +2202,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   bounds.left = position.x;
   bounds.top = position.y;
 
-  if (!this.anchPoint)
-    this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
-  this.anchPoint.center({x: position.x, y: position.y});
-
-  if (!this.labelBounds)
-    this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
-  this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+  // if (!this.anchPoint)
+  //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
+  // this.anchPoint.center({x: position.x, y: position.y});
+  //
+  // if (!this.labelBounds)
+  //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
+  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
   if (this.isComplex) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
@@ -2334,11 +2321,23 @@ anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
 };
 
 
+anychart.core.ui.LabelsFactory.Label.prototype.needChangeDomElement = function() {
+  var isComplex = this.isComplexText();
+  var isSimpleDom = anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text);
+  var isComplexDom = anychart.utils.instanceOf(this.textElement, acgraph.vector.Text);
+
+  return !this.textElement || (isComplex && isSimpleDom) || (!isComplex && isComplexDom);
+};
+
+
 anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
   if (!this.isComplexText()) {
-    var textElement = this.getTextElement();
-    var measurementNode = acgraph.getRenderer().createMeasurement();
-    textElement.renderTo(measurementNode);
+    var textElement = this.textElement;
+    if (this.needChangeDomElement()) {
+      textElement = this.getTextElement();
+      var measurementNode = acgraph.getRenderer().createMeasurement();
+      textElement.renderTo(measurementNode);
+    }
 
     var mergedSettings = this.getMergedSettings();
     var text = this.factory_.callFormat(mergedSettings['format'], this.formatProvider(), this.getIndex());
@@ -2422,14 +2421,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 
     var bgSettings = mergedSettings['background'];
     var backgroundJson = mergedSettings['background'];
-
-    // var bgSettings = mergedSettings['background'];
-    // if (anychart.utils.instanceOf(bgSettings, anychart.core.ui.Background)) {
-    //   if (bgSettings.enabled() || (this.backgroundElement_ && this.backgroundElement_.enabled()))
-    //     backgroundJson = bgSettings.serialize();
-    // } else {
-    //   backgroundJson = bgSettings;
-    // }
 
     if (goog.isObject(backgroundJson) && backgroundJson && !('enabled' in backgroundJson))
       backgroundJson['enabled'] = false;
@@ -2692,11 +2683,10 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
  * @return {!acgraph.vector.Text}
  */
 anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
-  var isComplex = this.isComplexText();
   var isSimpleDom = anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text);
   var isComplexDom = anychart.utils.instanceOf(this.textElement, acgraph.vector.Text);
 
-  if (!this.textElement || (isComplex && isSimpleDom) || (!isComplex && isComplexDom)) {
+  if (this.needChangeDomElement()) {
     if (isSimpleDom) {
       this.simpleTextLayer.parent(null);
     } else if (isComplexDom) {
