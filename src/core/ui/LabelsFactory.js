@@ -2312,8 +2312,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
       var field = fields[i];
       style[field] = target.call(this, field);
     }
-    // style['disablePointerEvents'] = true;
-
     textElement.style(style);
     textElement.applySettings();
   }
@@ -2699,8 +2697,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
   var isComplexDom = anychart.utils.instanceOf(this.textElement, acgraph.vector.Text);
 
   if (!this.textElement || (isComplex && isSimpleDom) || (!isComplex && isComplexDom)) {
-    console.log('getTextElement >>>>>> ', isComplex, this.textElement, isComplex && isSimpleDom, !isComplex && isComplexDom);
-
     if (isSimpleDom) {
       this.simpleTextLayer.parent(null);
     } else if (isComplexDom) {
