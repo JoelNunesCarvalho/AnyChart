@@ -2582,9 +2582,9 @@ anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
   var cx = this.cx;
   var cy = this.cy;
 
-  if (!this['c' + index])
-    this['c' + index] = this.container().circle(cx, cy, 2).fill('red').stroke('black').zIndex(1000);
-  this['c' + index].center({x: cx, y: cy});
+  // if (!this['c' + index])
+  //   this['c' + index] = this.container().circle(cx, cy, 2).fill('red').stroke('black').zIndex(1000);
+  // this['c' + index].center({x: cx, y: cy});
 
   iterator.reset();
   while (iterator.advance()) {
@@ -2621,17 +2621,17 @@ anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
 
         var bounds = label.bounds_.toCoordinateBox();
 
-        if (!this['a' + index])
-          this['a' + index] = this.container().circle(ax, ay, 4).fill('black .2').stroke('black').zIndex(1000);
-        this['a' + index].center({x: ax, y: ay});
-
-        if (!this['b' + index])
-          this['b' + index] = this.container().circle(bx, by, 2).fill('red .2').stroke('black').zIndex(1000);
-        this['b' + index].center({x: bx, y: by});
-
-        if (!this['labelBounds' + index])
-          this['labelBounds' + index] = this.container().rect().fill('none').stroke('red').zIndex(1000);
-        this['labelBounds' + index].setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+        // if (!this['a' + index])
+        //   this['a' + index] = this.container().circle(ax, ay, 4).fill('black .2').stroke('black').zIndex(1000);
+        // this['a' + index].center({x: ax, y: ay});
+        //
+        // if (!this['b' + index])
+        //   this['b' + index] = this.container().circle(bx, by, 2).fill('red .2').stroke('black').zIndex(1000);
+        // this['b' + index].center({x: bx, y: by});
+        //
+        // if (!this['labelBounds' + index])
+        //   this['labelBounds' + index] = this.container().rect().fill('none').stroke('red').zIndex(1000);
+        // this['labelBounds' + index].setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
         var singlePiePoint = ((iterator.getRowsCount() == 1 || sweep == 360) && !this.innerRadiusValue_);
         var notIntersectStartLine = singlePiePoint || !anychart.math.checkRectIntersectionWithSegment(ax, ay, cx, cy, bounds);

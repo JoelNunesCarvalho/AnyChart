@@ -709,9 +709,9 @@ anychart.core.ui.LabelsFactory.prototype.add = function(formatProvider, position
   label.formatProvider(formatProvider);
   label.positionProvider(positionProvider);
   label.setFactory(this);
-  // label.state('pointNormal', label);
-  // label.state('seriesNormal', this);
-  // label.state('seriesNormalTheme', this.themeSettings);
+  label.state('pointNormal', label);
+  label.state('seriesNormal', this);
+  label.state('seriesNormalTheme', this.themeSettings);
   label.resumeSignalsDispatching(false);
 
   return label;
@@ -754,7 +754,8 @@ anychart.core.ui.LabelsFactory.prototype.draw = function() {
 
   if (this.labels_) {
     goog.array.forEach(this.labels_, function(label, index) {
-        label.firstDraw();
+      label.dropMergedSettings();
+      label.firstDraw();
     }, this);
 
     goog.array.forEach(this.labels_, function(label, index) {
@@ -2214,13 +2215,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   bounds.left = position.x;
   bounds.top = position.y;
 
-  // if (!this.anchPoint)
-  //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
-  // this.anchPoint.center({x: position.x, y: position.y});
-  //
-  // if (!this.labelBounds)
-  //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
-  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+  if (!this.anchPoint)
+    this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
+  this.anchPoint.center({x: position.x, y: position.y});
+
+  if (!this.labelBounds)
+    this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
+  this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
   if (this.isComplex) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
@@ -2331,22 +2332,20 @@ anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
   text = goog.string.canonicalizeNewlines(goog.string.normalizeSpaces(text));
   var textArr = text.split(/\n/g);
 
-  this.isComplex = textArr.length != 1 || isWidthSet || isHeightSet || isHtml;
+  return this.isComplex = textArr.length != 1 || isWidthSet || isHeightSet || isHtml;
 };
 
 
 anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
   if (!this.isComplexText()) {
-    var textEl = this.textElement;
-    if (!textEl) {
-      textEl = this.getTextElement();
-      var measurementNode = acgraph.getRenderer().createMeasurement();
-      textEl.renderTo(measurementNode);
-    }
+    var textElement = this.getTextElement();
+    var measurementNode = acgraph.getRenderer().createMeasurement();
+    textElement.renderTo(measurementNode);
+
     var mergedSettings = this.getMergedSettings();
     var text = this.factory_.callFormat(mergedSettings['format'], this.formatProvider(), this.getIndex());
-    textEl.text(goog.isDef(text) ? String(text) : '');
-    this.applyTextSettings(textEl, true, mergedSettings);
+    textElement.text(goog.isDef(text) ? String(text) : '');
+    this.applyTextSettings(textElement, true, mergedSettings);
   }
 };
 
@@ -2457,9 +2456,11 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 
     this.getTextElement();
 
-    if (!this.isComplex && !this.simpleTextLayer) {
-      this.simpleTextLayer = acgraph.unmanagedLayer();
-      this.simpleTextLayer.zIndex(1);
+    if (!this.isComplex) {
+      if ( !this.simpleTextLayer) {
+        this.simpleTextLayer = acgraph.unmanagedLayer();
+        this.simpleTextLayer.zIndex(1);
+      }
       this.simpleTextLayer.parent(this.layer_);
       this.simpleTextLayer.content(this.textElement.getDomElement());
     }
@@ -2693,9 +2694,18 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
  * @return {!acgraph.vector.Text}
  */
 anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
-  if (!this.textElement ||
-      (this.isComplex && anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text)) ||
-      (!this.isComplex && anychart.utils.instanceOf(this.textElement, acgraph.vector.Text))) {
+  var isComplex = this.isComplexText();
+  var isSimpleDom = anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text);
+  var isComplexDom = anychart.utils.instanceOf(this.textElement, acgraph.vector.Text);
+
+  if (!this.textElement || (isComplex && isSimpleDom) || (!isComplex && isComplexDom)) {
+    console.log('getTextElement >>>>>> ', isComplex, this.textElement, isComplex && isSimpleDom, !isComplex && isComplexDom);
+
+    if (isSimpleDom) {
+      this.simpleTextLayer.parent(null);
+    } else if (isComplexDom) {
+      this.textElement.parent(null);
+    }
 
     if (this.isComplex) {
       this.textElement = new acgraph.vector.Text();
