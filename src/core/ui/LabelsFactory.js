@@ -2314,18 +2314,22 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
 
 
 anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
+  if (this.isComplex)
+    return this.isComplex;
+
   var mergedSettings = this.getMergedSettings();
 
   var isWidthSet = !goog.isNull(mergedSettings['width']);
   var isHeightSet = !goog.isNull(mergedSettings['height']);
   var isHtml = mergedSettings['useHtml'];
+  var isTextByPath = this.textElement ? !!this.textElement.path() : false;
 
   var text = String(this.factory_.callFormat(mergedSettings['format'], this.formatProvider(), this.getIndex()));
 
   text = goog.string.canonicalizeNewlines(goog.string.normalizeSpaces(text));
   var textArr = text.split(/\n/g);
 
-  return this.isComplex = textArr.length != 1 || isWidthSet || isHeightSet || isHtml;
+  return textArr.length != 1 || isWidthSet || isHeightSet || isHtml || isTextByPath;
 };
 
 
@@ -2422,7 +2426,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     var formatProvider = this.formatProvider();
     var text = String(factory.callFormat(mergedSettings['format'], formatProvider, this.getIndex()));
 
-    this.isComplex = this.isComplexText();
+    var isComplex = this.isComplexText();
     this.layer_.setTransformationMatrix(1, 0, 0, 1, 0, 0);
 
     var bgSettings = mergedSettings['background'];
@@ -2451,7 +2455,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 
     this.getTextElement();
 
-    if (!this.isComplex) {
+    if (!isComplex) {
       if ( !this.simpleTextLayer) {
         this.simpleTextLayer = acgraph.unmanagedLayer();
         this.simpleTextLayer.zIndex(1);
@@ -2484,7 +2488,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     //   parentHeight = this.finalParentBounds.height;
     // }
 
-    if (this.isComplex) {
+    if (isComplex) {
       this.textElement.width(null);
       this.textElement.height(null);
 
@@ -2686,6 +2690,11 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 };
 
 
+anychart.core.ui.LabelsFactory.Label.prototype.setComplex = function(value) {
+  this.isComplex = value;
+};
+
+
 /**
  * Returns the textElement.
  * @return {!acgraph.vector.Text}
@@ -2701,7 +2710,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
       this.textElement.parent(null);
     }
 
-    if (this.isComplex) {
+    if (this.isComplexText()) {
       this.textElement = new acgraph.vector.Text();
 
       this.textElement.attr('aria-hidden', 'true');

@@ -609,7 +609,7 @@ anychart.polarModule.Axis.prototype.calculateAxisBounds_ = function() {
               boundsCache[index] = points;
               radiusDelta = Math.max(boundsChecker.call(this, angle, dx, dy, points), radiusDelta);
             } else {
-              padding = label.getFinalSettings('padding');
+              padding = new anychart.core.utils.Padding().setup(label.getFinalSettings('padding'));
               labels.measureWithTransform(label);
               this.calcLabelTextPath(label, i, ticksArr);
 
@@ -934,6 +934,7 @@ anychart.polarModule.Axis.prototype.configureLabel_ = function(labels, index, ti
     label.suspendSignalsDispatching();
   }
   label.height(null);
+  label.setComplex(true);
 
   var pointState = {};
   if (label.getFinalSettings('position') != 'normal') {
@@ -949,14 +950,14 @@ anychart.polarModule.Axis.prototype.configureLabel_ = function(labels, index, ti
     if (hasFill) {
       pointState['adjustFontSize'] = false;
       dr = -(vAlign == acgraph.vector.Text.VAlign.MIDDLE ?
-          radiusDelta / 2 : vAlign == acgraph.vector.Text.VAlign.BOTTOM ? radiusDelta - padding.bottom() : padding.top());
+          radiusDelta / 2 : vAlign == acgraph.vector.Text.VAlign.BOTTOM ? radiusDelta - padding.bottom : padding.top);
     } else {
       labels.measureWithTransform(label);
       this.calcLabelTextPath(label, index, ticksArr, radius, angle);
       var height = label.getTextElement().getTextHeight();
 
       var dh = vAlign == acgraph.vector.Text.VAlign.MIDDLE ?
-          height / 2 + padding.bottom() : vAlign == acgraph.vector.Text.VAlign.BOTTOM ? padding.top() : height + padding.bottom();
+          height / 2 + padding.bottom : vAlign == acgraph.vector.Text.VAlign.BOTTOM ? padding.top : height + padding.bottom;
       dr = dh - radiusDelta;
     }
 
