@@ -1502,7 +1502,7 @@ anychart.core.Axis.prototype.getRemainingBounds = function(opt_includeInsideCont
   if (parentBounds) {
     var remainingBounds = parentBounds.clone();
 
-    if (this.scale() && this.enabled()) {
+    if (this.enabled()) {
       var axisBounds = this.getPixelBounds(opt_includeInsideContent);
       var padding = this.padding();
       var heightOffset = parentBounds.height - padding.tightenHeight(parentBounds.height) + axisBounds.height;

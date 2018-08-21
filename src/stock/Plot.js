@@ -2151,12 +2151,16 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
         axis.suspendSignalsDispatching();
         var width = axis.width();
         if (axis.orientation() == anychart.enums.Orientation.LEFT) {
-          axis.parentBounds(/** @type {number} */(seriesBounds.left - width - leftPadding),
-              seriesBounds.top, 0, seriesBounds.height);
-          leftPadding += width;
+          if (!goog.string.startsWith(legend.getOption('position'), 'left')) {
+            axis.parentBounds(/** @type {number} */(seriesBounds.left - width - leftPadding), seriesBounds.top, 0, seriesBounds.height);
+            leftPadding += width;
+          } else {
+            axis.parentBounds(seriesBounds);
+            seriesBounds = axis.getRemainingBounds();
+          }
         } else if (axis.orientation() == anychart.enums.Orientation.RIGHT) {
-          rightPadding += width;
-          axis.parentBounds(seriesBounds.left, seriesBounds.top, /** @type {number} */(seriesBounds.width + rightPadding), seriesBounds.height);
+          axis.parentBounds(seriesBounds);
+          seriesBounds = axis.getRemainingBounds();
         }
         axis.resumeSignalsDispatching(false);
       }
