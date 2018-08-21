@@ -2457,8 +2457,6 @@ anychart.core.series.Base.prototype.resolveAutoAnchor = function(position, rotat
 
 /**
  * Checks if label bounds intersect series bounds and flips autoAnchor if needed.
- * @param {anychart.core.ui.LabelsFactory} factory
- * @param {anychart.core.ui.LabelsFactory.Label} label
  */
 anychart.core.series.Base.prototype.checkBoundsCollision = function() {
   var factory = this.labels();

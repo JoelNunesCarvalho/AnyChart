@@ -2422,10 +2422,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     var formatProvider = this.formatProvider();
     var text = String(factory.callFormat(mergedSettings['format'], formatProvider, this.getIndex()));
 
-    text = goog.string.canonicalizeNewlines(goog.string.normalizeSpaces(text));
-    var textArr = text.split(/\n/g);
-    this.isComplex = textArr.length != 1 || isWidthSet || isHeightSet || isHtml;
-
+    this.isComplex = this.isComplexText();
     this.layer_.setTransformationMatrix(1, 0, 0, 1, 0, 0);
 
     var bgSettings = mergedSettings['background'];
@@ -2461,6 +2458,8 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
       }
       this.simpleTextLayer.parent(this.layer_);
       this.simpleTextLayer.content(this.textElement.getDomElement());
+    } else {
+      this.textElement.parent(this.layer_);
     }
 
     //define parent bounds
@@ -2707,7 +2706,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
 
       this.textElement.attr('aria-hidden', 'true');
       this.textElement.zIndex(1);
-      this.textElement.parent(this.layer_);
       this.textElement.disablePointerEvents(true);
     } else {
       this.textElement = new anychart.core.ui.Text();
