@@ -2476,17 +2476,13 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
       }
     }, true));
 
-    // if (!this.finalParentBounds) {
-    //   if (factory.container()) {
-    //     this.finalParentBounds = factory.container().getBounds();
-    //   } else {
-    //     this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
-    //   }
-    // }
-    // if (this.finalParentBounds) {
-    //   parentWidth = this.finalParentBounds.width;
-    //   parentHeight = this.finalParentBounds.height;
-    // }
+    if (!this.finalParentBounds) {
+      this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
+    }
+    if (this.finalParentBounds) {
+      parentWidth = this.finalParentBounds.width;
+      parentHeight = this.finalParentBounds.height;
+    }
 
     if (isComplex) {
       this.textElement.width(null);
