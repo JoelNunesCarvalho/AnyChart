@@ -1095,7 +1095,7 @@ anychart.polarModule.Axis.prototype.calcLabelTextPath = function(label, index, t
   var scale = /** @type {anychart.scales.Ordinal|anychart.scales.ScatterBase} */(this.scale());
   var radius = goog.isDef(opt_radius) ? opt_radius : label.positionProvider()['value']['radius'];
   var angle = goog.isDef(opt_angle) ? opt_angle : label.positionProvider()['value']['angle'];
-  var padding = label.getFinalSettings('padding');
+  var padding = new anychart.core.utils.Padding().setup(label.getFinalSettings('padding'));
   var pxPerDegree = (2 * Math.PI * radius) / 360;
   var startAngle, endAngle;
 
