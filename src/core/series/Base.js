@@ -2222,7 +2222,6 @@ anychart.core.series.Base.prototype.extractSettings = function(settingsArray, op
  * @protected
  */
 anychart.core.series.Base.prototype.drawFactoryElement = function(seriesFactoryGetters, chartFactoryGetters, overrideNames, hasPointOverrides, isLabel, positionYs, point, state, callDraw) {
-  debugger;
   var isDraw, positionProvider, i, indexes;
   var index = point.getIndex();
   if (isNaN(index))
@@ -2466,27 +2465,29 @@ anychart.core.series.Base.prototype.checkBoundsCollision = function() {
   var iterator = this.getResetIterator();
   while (iterator.advance()) {
     var label = factory.getLabel(iterator.getIndex());
-    var anchor = label.getFinalSettings('anchor');
-    var position = iterator.meta('labelPosition');
+    if (label) {
+      var anchor = label.getFinalSettings('anchor');
+      var position = iterator.meta('labelPosition');
 
-    if (goog.isDef(position) && anchor == anychart.enums.Anchor.AUTO) {
-      anchor = this.resolveAutoAnchor(position, Number(label.getFinalSettings('rotation')) || 0);
-      label.autoAnchor(anchor);
+      if (goog.isDef(position) && anchor == anychart.enums.Anchor.AUTO) {
+        anchor = this.resolveAutoAnchor(position, Number(label.getFinalSettings('rotation')) || 0);
+        label.autoAnchor(anchor);
 
-      var bounds = label.bounds_;
-      var rotation = /** @type {number} */(label.getFinalSettings('rotation'));
-      anchor = anychart.utils.rotateAnchor(anchor, -rotation);
-      if (anychart.utils.isRightAnchor(anchor) && bounds.left < this.pixelBoundsCache.left ||
-          anychart.utils.isLeftAnchor(anchor) && (bounds.left + bounds.width > this.pixelBoundsCache.left + this.pixelBoundsCache.width)) {
-        anchor = anychart.utils.flipAnchorHorizontal(anchor);
+        var bounds = label.bounds_;
+        var rotation = /** @type {number} */(label.getFinalSettings('rotation'));
+        anchor = anychart.utils.rotateAnchor(anchor, -rotation);
+        if (anychart.utils.isRightAnchor(anchor) && bounds.left < this.pixelBoundsCache.left ||
+            anychart.utils.isLeftAnchor(anchor) && (bounds.left + bounds.width > this.pixelBoundsCache.left + this.pixelBoundsCache.width)) {
+          anchor = anychart.utils.flipAnchorHorizontal(anchor);
+        }
+        if (anychart.utils.isBottomAnchor(anchor) && bounds.top < this.pixelBoundsCache.top ||
+            anychart.utils.isTopAnchor(anchor) && (bounds.top + bounds.height > this.pixelBoundsCache.top + this.pixelBoundsCache.height)) {
+
+          anchor = anychart.utils.flipAnchorVertical(anchor);
+        }
+        anchor = anychart.utils.rotateAnchor(anchor, rotation);
+        label.autoAnchor(anchor);
       }
-      if (anychart.utils.isBottomAnchor(anchor) && bounds.top < this.pixelBoundsCache.top ||
-          anychart.utils.isTopAnchor(anchor) && (bounds.top + bounds.height > this.pixelBoundsCache.top + this.pixelBoundsCache.height)) {
-
-        anchor = anychart.utils.flipAnchorVertical(anchor);
-      }
-      anchor = anychart.utils.rotateAnchor(anchor, rotation);
-      label.autoAnchor(anchor);
     }
   }
 

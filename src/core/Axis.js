@@ -1352,7 +1352,7 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
       break;
   }
 
-  var anchor = this.themeSettings['labels']['anchor'];
+  var anchor = (this.themeSettings['labels'] && this.themeSettings['labels']['anchor']) || anychart.enums.Anchor.CENTER;
   var anchorCoordinate = anychart.utils.getCoordinateByAnchor(new anychart.math.Rect(0, 0, labelBounds.width, labelBounds.height), anchor);
 
   // var ___name = 'lbl_a' + index;
