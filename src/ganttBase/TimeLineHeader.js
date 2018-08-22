@@ -749,6 +749,7 @@ anychart.ganttBaseModule.TimeLineHeader.prototype.labelsConfiguration = function
   var bounds = anychart.math.rect(left_, to, right_ - left_, levelHeight);
 
   var label = labels.add({'tickValue': tick['start']}, null, col);
+  label.setComplex(true);
 
   var padding = settings['padding'];
   if (padding) {
