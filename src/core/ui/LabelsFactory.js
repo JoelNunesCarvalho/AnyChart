@@ -1869,9 +1869,10 @@ anychart.core.ui.LabelsFactory.Label.prototype.setSettings = function(opt_settin
     this.states_['pointState'] = opt_settings2;
   }
 
-  if (goog.isDef(opt_settings1) || goog.isDef(opt_settings2))
+  if (goog.isDef(opt_settings1) || goog.isDef(opt_settings2)) {
     this.invalidate(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.ENABLED,
         anychart.Signal.BOUNDS_CHANGED | anychart.Signal.NEEDS_REDRAW);
+  }
   return this;
 };
 
@@ -2343,7 +2344,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.needChangeDomElement = function()
 
 
 anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
-  this.dropMergedSettings();
+  if (this.hasInvalidationState(anychart.ConsistencyState.APPEARANCE)) {
+    this.dropMergedSettings();
+  }
   if (!this.isComplexText()) {
     var textElement = this.textElement;
     if (this.needChangeDomElement()) {
@@ -2477,7 +2480,12 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     }, true));
 
     if (!this.finalParentBounds) {
-      this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
+      if (factory.container() && isComplex) {
+        this.finalParentBounds = factory.container().getBounds();
+      } else {
+        this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
+      }
+
     }
     if (this.finalParentBounds) {
       parentWidth = this.finalParentBounds.width;

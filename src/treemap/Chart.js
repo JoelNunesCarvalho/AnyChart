@@ -1426,6 +1426,7 @@ anychart.treemapModule.Chart.prototype.configureLabel = function(pointState, isH
       node.meta('labelIndex', label.getIndex());
       this.labelToPointIndex_[(isHeader ? 'h' : 'l') + label.getIndex()] = node.meta('index');
     }
+    // label.setComplex(true);
 
     label.resetSettings();
     label.currentLabelsFactory(/** @type {anychart.core.ui.LabelsFactory} */ (stateFactory));

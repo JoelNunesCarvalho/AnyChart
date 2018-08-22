@@ -169,12 +169,21 @@ anychart.core.ui.Text.prototype.applySettings = function() {
  * @return {anychart.math.Rect}
  */
 anychart.core.ui.Text.prototype.getBounds = function() {
-  if (!this.bounds_) {
+  if (!this.bounds) {
     var dom = this.getDomElement();
     var bbox = dom['getBBox']();
 
-    this.bounds_ = new anychart.math.Rect(bbox.x, -bbox.y, bbox.width, bbox.height);
+    this.bounds = new anychart.math.Rect(bbox.x, -bbox.y, bbox.width, bbox.height);
     this.baseLine = -bbox.y;
   }
-  return this.bounds_;
+  return this.bounds;
+};
+
+
+/**
+ * Drop bounds.
+ */
+anychart.core.ui.Text.prototype.dropBounds = function() {
+  this.baseLine = 0;
+  this.bounds = null;
 };

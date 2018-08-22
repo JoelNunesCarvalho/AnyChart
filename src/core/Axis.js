@@ -805,70 +805,187 @@ anychart.core.Axis.prototype.dropOverlappedLabelsCache_ = function() {
  * @private
  */
 anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
-  if (this.overlapMode_ == anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP) {
-    return false;
-  } else {
+  if (!this.overlappedLabels_ || this.hasInvalidationState(anychart.ConsistencyState.AXIS_OVERLAP)) {
     var scale = /** @type {anychart.scales.ScatterBase|anychart.scales.Ordinal} */(this.scale());
-    var overlappedLabels = [];
-    var overlappedMinorLabels = [];
-
     if (scale) {
-      var i, j, len;
+      var scaleTicksArr, ticksArrLen, labels, isLabels;
+      labels = /** @type {anychart.core.ui.LabelsFactory} */(this.labels());
+      isLabels = labels.enabled();
+      scaleTicksArr = scale.ticks().get();
+      ticksArrLen = scaleTicksArr.length;
 
-      /**
-       * Index of previous major label which is displayed.
-       * @type {number}
-       */
-      var prevDrawableLabel = -1;
-      /**
-       * Index of the next label, which we should display and it doesn't overlap previous major label and the
-       * very last if it is on.
-       * @type {number}
-       */
-      var nextDrawableLabel = -1;
-      /**
-       * Index of previous minor label which is displayed.
-       * @type {number}
-       */
-      var prevDrawableMinorLabel = -1;
-
-      var scaleTicksArr = scale.ticks().get();
-      var ticksArrLen = scaleTicksArr.length;
-      var tickVal, ratio, bounds1, bounds2, bounds3, bounds4;
-      var tempRatio;
-      var k = -1;
-      var labels = /** @type {anychart.core.ui.LabelsFactory} */(this.labels());
-      var labelsPosition = anychart.enums.SidePosition.OUTSIDE;
-      var isLabels = true;
-      var insideLabelSpace = this.insideBounds_ && anychart.utils.sidePositionToNumber(labelsPosition) < 0  ?
-          this.insideBounds_ : null;
-      var isLabelInInsideSpace;
-
-      for (i = 0, len = ticksArrLen; i < len; i++) {
-        this.getLabel(i, true, scaleTicksArr, opt_bounds)
+      if (isLabels) {
+        var i, j, len;
+        for (i = 0, len = ticksArrLen; i < len; i++) {
+          this.getLabel(i, true, scaleTicksArr, opt_bounds)
+        }
       }
 
+      var scaleMinorTicksArr, minorTicksArrLen, minorLabels, isMinorLabels;
       if (anychart.utils.instanceOf(scale, anychart.scales.ScatterBase)) {
-        var scaleMinorTicksArr = scale.minorTicks().get();
-        i = 0;
-        j = 0;
-        var minorTicksArrLen = scaleMinorTicksArr.length;
-        var minorTickVal, minorRatio;
-        // var minorLabels = /** @type {anychart.core.ui.LabelsFactory} */(this.minorLabels());
-        var isMinorLabels = false;
+        minorLabels = /** @type {anychart.core.ui.LabelsFactory} */(this.minorLabels());
+        isMinorLabels = minorLabels.enabled();
+        scaleMinorTicksArr = scale.minorTicks().get();
+        minorTicksArrLen = scaleMinorTicksArr.length;
 
-        while (i < ticksArrLen || j < minorTicksArrLen) {
-          tickVal = scaleTicksArr[i];
-          minorTickVal = scaleMinorTicksArr[j];
-          ratio = scale.transform(tickVal);
-          minorRatio = scale.transform(minorTickVal);
-          bounds1 = bounds2 = bounds3 = bounds4 = null;
+        if (isMinorLabels) {
+          for (i = 0, len = minorTicksArrLen; i < len; i++) {
+            this.getLabel(i, false, scaleMinorTicksArr, opt_bounds)
+          }
+        }
+      }
+    }
 
-          if (nextDrawableLabel == -1 && isLabels) {
-            k = i;
-            while (nextDrawableLabel == -1 && k < ticksArrLen) {
-              if ((!k && this.drawFirstLabel()) || (k == ticksArrLen - 1 && this.drawLastLabel()) || (k != 0 && k != ticksArrLen - 1))
-                bounds1 = this.getLabelBounds_(k, true, scaleTicksArr, opt_bounds);
+    if (this.overlapMode_ == anychart.enums.LabelsOverlapMode.ALLOW_OVERLAP) {
+      return {labels: isLabels, minorLabels: isMinorLabels};
+    } else {
+      var overlappedLabels = [];
+      var overlappedMinorLabels = [];
+
+      if (scale) {
+        /**
+         * Index of previous major label which is displayed.
+         * @type {number}
+         */
+        var prevDrawableLabel = -1;
+        /**
+         * Index of the next label, which we should display and it doesn't overlap previous major label and the
+         * very last if it is on.
+         * @type {number}
+         */
+        var nextDrawableLabel = -1;
+        /**
+         * Index of previous minor label which is displayed.
+         * @type {number}
+         */
+        var prevDrawableMinorLabel = -1;
+
+        var tickVal, ratio, bounds1, bounds2, bounds3, bounds4;
+        var tempRatio;
+        var k = -1;
+        var labelsPosition = anychart.enums.SidePosition.OUTSIDE;
+        var insideLabelSpace = this.insideBounds_ && anychart.utils.sidePositionToNumber(labelsPosition) < 0 ?
+            this.insideBounds_ : null;
+        var isLabelInInsideSpace;
+
+        if (anychart.utils.instanceOf(scale, anychart.scales.ScatterBase)) {
+          i = 0;
+          j = 0;
+          var minorTickVal, minorRatio;
+          while (i < ticksArrLen || j < minorTicksArrLen) {
+            tickVal = scaleTicksArr[i];
+            minorTickVal = scaleMinorTicksArr[j];
+            ratio = scale.transform(tickVal);
+            minorRatio = scale.transform(minorTickVal);
+            bounds1 = bounds2 = bounds3 = bounds4 = null;
+
+            if (nextDrawableLabel == -1 && isLabels) {
+              k = i;
+              while (nextDrawableLabel == -1 && k < ticksArrLen) {
+                if ((!k && this.drawFirstLabel()) || (k == ticksArrLen - 1 && this.drawLastLabel()) || (k != 0 && k != ticksArrLen - 1))
+                  bounds1 = this.getLabelBounds_(k, true, scaleTicksArr, opt_bounds);
+                else
+                  bounds1 = null;
+
+                if (prevDrawableLabel != -1)
+                  bounds2 = this.getLabelBounds_(prevDrawableLabel, true, scaleTicksArr, opt_bounds);
+                else
+                  bounds2 = null;
+
+                if (k != ticksArrLen - 1 && this.drawLastLabel())
+                  bounds3 = this.getLabelBounds_(ticksArrLen - 1, true, scaleTicksArr, opt_bounds);
+                else
+                  bounds3 = null;
+
+                isLabelInInsideSpace = insideLabelSpace ? !this.hasIntersectionLabelsSpace(insideLabelSpace, bounds1) : true;
+                if (bounds1 &&
+                    isLabelInInsideSpace &&
+                    !(anychart.math.checkRectIntersection(bounds1, bounds2) ||
+                        anychart.math.checkRectIntersection(bounds1, bounds3))) {
+                  tempRatio = scale.transform(scaleTicksArr[k]);
+                  if ((tempRatio <= 0 && this.drawFirstLabel()) || (tempRatio >= 1 && this.drawLastLabel()))
+                    nextDrawableLabel = k;
+                  else if (tempRatio > 0 && tempRatio < 1)
+                    nextDrawableLabel = k;
+                }
+                k++;
+              }
+            }
+
+            if (((ratio <= minorRatio && i < ticksArrLen) || j == minorTicksArrLen)) {
+              if (isLabels && i == nextDrawableLabel) {
+                prevDrawableLabel = i;
+                nextDrawableLabel = -1;
+                overlappedLabels.push(true);
+              } else {
+                overlappedLabels.push(false);
+              }
+              i++;
+              if (ratio == minorRatio && (isLabels || this.ticks().enabled())) {
+                overlappedMinorLabels.push(false);
+                j++;
+              }
+            } else {
+              if (isMinorLabels) {
+                bounds1 = this.getLabelBounds_(j, false, scaleMinorTicksArr, opt_bounds);
+
+                if (prevDrawableLabel != -1)
+                  bounds2 = this.getLabelBounds_(prevDrawableLabel, true, scaleTicksArr, opt_bounds);
+
+                if (nextDrawableLabel != -1)
+                  bounds3 = this.getLabelBounds_(nextDrawableLabel, true, scaleTicksArr, opt_bounds);
+
+                if (prevDrawableMinorLabel != -1)
+                  bounds4 = this.getLabelBounds_(prevDrawableMinorLabel, false, scaleMinorTicksArr, opt_bounds);
+
+                // var label = this.minorLabels().getLabel(j);
+                // var isLabelEnabled = label ?
+                //     goog.isDef(label.enabled()) ?
+                //         label.enabled() :
+                //         true :
+                //     true;
+                var isLabelEnabled = false;
+
+                isLabelInInsideSpace = insideLabelSpace ? !this.hasIntersectionLabelsSpace(insideLabelSpace, bounds1) : true;
+                if (isLabelInInsideSpace &&
+                    !(anychart.math.checkRectIntersection(bounds1, bounds2) ||
+                        anychart.math.checkRectIntersection(bounds1, bounds3) ||
+                        anychart.math.checkRectIntersection(bounds1, bounds4)) && isLabelEnabled) {
+
+                  tempRatio = scale.transform(scaleMinorTicksArr[j]);
+                  if ((tempRatio <= 0 && this.drawFirstLabel()) || (tempRatio >= 1 && this.drawLastLabel())) {
+                    prevDrawableMinorLabel = j;
+                    overlappedMinorLabels.push(true);
+                  } else if (tempRatio > 0 && tempRatio < 1) {
+                    prevDrawableMinorLabel = j;
+                    overlappedMinorLabels.push(true);
+                  } else {
+                    overlappedMinorLabels.push(false);
+                  }
+
+                } else {
+                  overlappedMinorLabels.push(false);
+                }
+              } else {
+                overlappedMinorLabels.push(false);
+              }
+              j++;
+            }
+          }
+          if (!isMinorLabels) overlappedMinorLabels = false;
+        } else if (anychart.utils.instanceOf(scale, anychart.scales.Base)) {
+          if (this.drawLastLabel()) {
+            bounds3 = this.getLabelBounds_(ticksArrLen - 1, true, scaleTicksArr, opt_bounds);
+            bounds3 = insideLabelSpace ?
+                (!this.hasIntersectionLabelsSpace(insideLabelSpace, bounds3) ? bounds3 : null) :
+                bounds3;
+          } else
+            bounds3 = null;
+
+          for (i = 0; i < ticksArrLen; i++) {
+            if (isLabels) {
+              if ((!i && this.drawFirstLabel()) || (i == ticksArrLen - 1 && this.drawLastLabel()) || (i != 0 && i != ticksArrLen - 1))
+                bounds1 = this.getLabelBounds_(i, true, scaleTicksArr, opt_bounds);
               else
                 bounds1 = null;
 
@@ -877,141 +994,37 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
               else
                 bounds2 = null;
 
-              if (k != ticksArrLen - 1 && this.drawLastLabel())
-                bounds3 = this.getLabelBounds_(ticksArrLen - 1, true, scaleTicksArr, opt_bounds);
-              else
-                bounds3 = null;
-
               isLabelInInsideSpace = insideLabelSpace ? !this.hasIntersectionLabelsSpace(insideLabelSpace, bounds1) : true;
-              if (bounds1 &&
-                  isLabelInInsideSpace &&
-                  !(anychart.math.checkRectIntersection(bounds1, bounds2) ||
-                      anychart.math.checkRectIntersection(bounds1, bounds3))) {
-                tempRatio = scale.transform(scaleTicksArr[k]);
-                if ((tempRatio <= 0 && this.drawFirstLabel()) || (tempRatio >= 1 && this.drawLastLabel()))
-                  nextDrawableLabel = k;
-                else if (tempRatio > 0 && tempRatio < 1)
-                  nextDrawableLabel = k;
-              }
-              k++;
-            }
-          }
-
-          if (((ratio <= minorRatio && i < ticksArrLen) || j == minorTicksArrLen)) {
-            if (isLabels && i == nextDrawableLabel) {
-              prevDrawableLabel = i;
-              nextDrawableLabel = -1;
-              overlappedLabels.push(true);
-            } else {
-              overlappedLabels.push(false);
-            }
-            i++;
-            if (ratio == minorRatio && (isLabels || this.ticks().enabled())) {
-              overlappedMinorLabels.push(false);
-              j++;
-            }
-          } else {
-            if (isMinorLabels) {
-              bounds1 = this.getLabelBounds_(j, false, scaleMinorTicksArr, opt_bounds);
-
-              if (prevDrawableLabel != -1)
-                bounds2 = this.getLabelBounds_(prevDrawableLabel, true, scaleTicksArr, opt_bounds);
-
-              if (nextDrawableLabel != -1)
-                bounds3 = this.getLabelBounds_(nextDrawableLabel, true, scaleTicksArr, opt_bounds);
-
-              if (prevDrawableMinorLabel != -1)
-                bounds4 = this.getLabelBounds_(prevDrawableMinorLabel, false, scaleMinorTicksArr, opt_bounds);
-
-              // var label = this.minorLabels().getLabel(j);
-              // var isLabelEnabled = label ?
-              //     goog.isDef(label.enabled()) ?
-              //         label.enabled() :
-              //         true :
-              //     true;
-              var isLabelEnabled = false;
-
-              isLabelInInsideSpace = insideLabelSpace ? !this.hasIntersectionLabelsSpace(insideLabelSpace, bounds1) : true;
-              if (isLabelInInsideSpace &&
-                  !(anychart.math.checkRectIntersection(bounds1, bounds2) ||
-                      anychart.math.checkRectIntersection(bounds1, bounds3) ||
-                      anychart.math.checkRectIntersection(bounds1, bounds4)) && isLabelEnabled) {
-
-                tempRatio = scale.transform(scaleMinorTicksArr[j]);
-                if ((tempRatio <= 0 && this.drawFirstLabel()) || (tempRatio >= 1 && this.drawLastLabel())) {
-                  prevDrawableMinorLabel = j;
-                  overlappedMinorLabels.push(true);
-                } else if (tempRatio > 0 && tempRatio < 1) {
-                  prevDrawableMinorLabel = j;
-                  overlappedMinorLabels.push(true);
+              if (!i) {
+                if (this.drawFirstLabel() && isLabelInInsideSpace) {
+                  prevDrawableLabel = i;
+                  overlappedLabels.push(true);
                 } else {
-                  overlappedMinorLabels.push(false);
+                  overlappedLabels.push(false);
                 }
-
-              } else {
-                overlappedMinorLabels.push(false);
-              }
-            } else {
-              overlappedMinorLabels.push(false);
-            }
-            j++;
-          }
-        }
-        if (!isMinorLabels) overlappedMinorLabels = false;
-      } else if (anychart.utils.instanceOf(scale, anychart.scales.Base)) {
-        if (this.drawLastLabel()) {
-          bounds3 = this.getLabelBounds_(ticksArrLen - 1, true, scaleTicksArr, opt_bounds);
-          bounds3 = insideLabelSpace ?
-              (!this.hasIntersectionLabelsSpace(insideLabelSpace, bounds3) ? bounds3 : null) :
-              bounds3;
-        } else
-          bounds3 = null;
-
-        for (i = 0; i < ticksArrLen; i++) {
-          if (isLabels) {
-            if ((!i && this.drawFirstLabel()) || (i == ticksArrLen - 1 && this.drawLastLabel()) || (i != 0 && i != ticksArrLen - 1))
-              bounds1 = this.getLabelBounds_(i, true, scaleTicksArr, opt_bounds);
-            else
-              bounds1 = null;
-
-            if (prevDrawableLabel != -1)
-              bounds2 = this.getLabelBounds_(prevDrawableLabel, true, scaleTicksArr, opt_bounds);
-            else
-              bounds2 = null;
-
-            isLabelInInsideSpace = insideLabelSpace ? !this.hasIntersectionLabelsSpace(insideLabelSpace, bounds1) : true;
-            if (!i) {
-              if (this.drawFirstLabel() && isLabelInInsideSpace) {
+              } else if (i == ticksArrLen - 1) {
+                if (this.drawLastLabel() && isLabelInInsideSpace) {
+                  prevDrawableLabel = i;
+                  overlappedLabels.push(true);
+                } else {
+                  overlappedLabels.push(false);
+                }
+              } else if (isLabelInInsideSpace && !(anychart.math.checkRectIntersection(bounds1, bounds2) ||
+                  anychart.math.checkRectIntersection(bounds1, bounds3))) {
                 prevDrawableLabel = i;
                 overlappedLabels.push(true);
               } else {
                 overlappedLabels.push(false);
               }
-            } else if (i == ticksArrLen - 1) {
-              if (this.drawLastLabel() && isLabelInInsideSpace) {
-                prevDrawableLabel = i;
-                overlappedLabels.push(true);
-              } else {
-                overlappedLabels.push(false);
-              }
-            } else if (isLabelInInsideSpace && !(anychart.math.checkRectIntersection(bounds1, bounds2) ||
-                anychart.math.checkRectIntersection(bounds1, bounds3))) {
-              prevDrawableLabel = i;
-              overlappedLabels.push(true);
             } else {
               overlappedLabels.push(false);
             }
-          } else {
-            overlappedLabels.push(false);
           }
         }
       }
+      if (!isLabels) overlappedLabels = false;
+      this.overlappedLabels_ = {labels: overlappedLabels, minorLabels: overlappedMinorLabels};
     }
-    if (!isLabels) overlappedLabels = false;
-    this.overlappedLabels_ = {labels: overlappedLabels, minorLabels: overlappedMinorLabels};
-  }
-  if (!this.overlappedLabels_ || this.hasInvalidationState(anychart.ConsistencyState.AXIS_OVERLAP)) {
-
     this.invalidate(this.ALL_VISUAL_STATES);
     this.markConsistent(anychart.ConsistencyState.AXIS_OVERLAP);
   }
@@ -1334,7 +1347,9 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
     labelBounds = labels.measure(label, undefined, undefined, index);
   } else {
     var textEl = label.getTextElement();
+
     labelBounds = textEl.getBounds();
+
     var padding = label.getFinalSettings('padding');
 
     labelBounds = anychart.core.utils.Padding.widenBounds(labelBounds, padding);
@@ -1410,6 +1425,20 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
  * Drop bounds cache.
  */
 anychart.core.Axis.prototype.dropBoundsCache = function() {
+  var labels = /** @type {anychart.core.ui.LabelsFactory} */(this.labels());
+  var isLabels = labels.enabled();
+
+  if (isLabels) {
+    for (var i = 0, len = labels.labelsCount(); i < len; i++) {
+      var label = labels.getLabel(i);
+      var textEl = label.getTextElement();
+      if (!label.isComplexText() && label.getTextElement()) {
+        textEl.dropBounds();
+        textEl.setPosition(0, 0);
+      }
+    }
+  }
+
   if (this.labelsBoundingRects_) this.labelsBoundingRects_.length = 0;
   this.labelsBounds_.length = 0;
   this.minorLabelsBounds_.length = 0;
