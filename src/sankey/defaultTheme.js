@@ -18,9 +18,7 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
          * @this {*}
          * @return {*}
          */
-        'stroke': function() {
-          return this['conflict'] ? '2 red' : 'none';
-        },
+        'stroke': 'none',
         'labels': {
           'enabled': true,
           'format': '{%name}',

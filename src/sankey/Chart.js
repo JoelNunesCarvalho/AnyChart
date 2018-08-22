@@ -174,7 +174,7 @@ anychart.sankeyModule.Chart.prototype.isMissing_ = function(from, to, flow) {
   var valueMissing = !(goog.isNumber(flow) && flow > 0);
   var fromMissing = !(goog.isString(from) && from.length > 0);
   var toMissing = !goog.isNull(to) && !(goog.isString(to) && to.length > 0);
-  return valueMissing && fromMissing && toMissing;
+  return valueMissing || fromMissing || toMissing;
 };
 
 
@@ -250,8 +250,9 @@ anychart.sankeyModule.Chart.prototype.shiftNodeLevels = function(fromNode) {
   var toNodes = fromNode.outcomeNodes;
   for (var i = 0; i < toNodes.length; i++) {
     var toNode = toNodes[i];
-    if (fromNode.level <= toNode.level) {
-      toNode.level = fromNode.level + 1;
+    if (fromNode.level >= toNode.level) {
+      var diff = fromNode.level - toNode.level;
+      toNode.level = toNode.level + diff + 1;
       this.shiftNodeLevels(toNode);
     }
   }
@@ -279,6 +280,9 @@ anychart.sankeyModule.Chart.prototype.createFlow = function(fromNode, toNode, fl
     fromNode.outcomeValue += flow;
     fromNode.outcomeValues.push(flow);
     fromNode.outcomeNodes.push(toNode);
+
+    if (isNaN(toNode.incomeValue))
+      toNode.incomeValue = 0;
 
     toNode.incomeValue += flow;
     toNode.incomeValues.push(flow);
@@ -352,7 +356,7 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
   while (iterator.advance()) {
     from = /** @type {string} */ (iterator.get('from'));
     to = /** @type {string} */ (iterator.get('to'));
-    flow = /** @type {number} */ (iterator.get('flow'));
+    flow = /** @type {number} */ (anychart.utils.toNumber(iterator.get('flow')));
     if (this.isMissing_(from, to, flow))
       continue;
 
@@ -998,9 +1002,11 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     nodeWidth = anychart.utils.normalizeSize(nodeWidth, levelWidth);
     var dropOffPadding = nodeWidth * 0.3;
 
-    // if we have dropoff on last node we should count it in calculations to show it correctly
-    var lastNodeDropOffPadding = this.levels[this.maxLevel].nodes[this.maxNodesCount - 1].dropoffValue ? dropOffPadding : 0;
-    this.weightAspect = (bounds.height - (this.maxNodesCount - 1) * baseNodePadding - lastNodeDropOffPadding) / this.maxLevelWeight;
+    if (this.levels.length) {
+      // if we have dropoff on last node we should count it in calculations to show it correctly
+      var lastNodeDropOffPadding = this.levels[this.maxLevel].nodes[this.maxNodesCount - 1].dropoffValue ? dropOffPadding : 0;
+      this.weightAspect = (bounds.height - (this.maxNodesCount - 1) * baseNodePadding - lastNodeDropOffPadding) / this.maxLevelWeight;
+    }
 
     var nodesPerLevel;
     var levelPadding = baseNodePadding;
