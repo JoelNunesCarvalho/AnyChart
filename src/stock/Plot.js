@@ -2159,8 +2159,13 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
             seriesBounds = axis.getRemainingBounds();
           }
         } else if (axis.orientation() == anychart.enums.Orientation.RIGHT) {
-          axis.parentBounds(seriesBounds);
-          seriesBounds = axis.getRemainingBounds();
+          if (!goog.string.startsWith(legend.getOption('position'), 'right')) {
+            rightPadding += width;
+            axis.parentBounds(seriesBounds.left, seriesBounds.top, /** @type {number} */(seriesBounds.width + rightPadding), seriesBounds.height);
+          } else {
+            axis.parentBounds(seriesBounds);
+            seriesBounds = axis.getRemainingBounds();
+          }
         }
         axis.resumeSignalsDispatching(false);
       }
