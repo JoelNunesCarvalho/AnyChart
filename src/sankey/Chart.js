@@ -97,7 +97,7 @@ anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META = (function() {
  * Sets data for sankey chart.
  * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_value Value to set.
  * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
- * @return {anychart.sankeyModule.Chart|anychart.data.View|anychart.data.Mapping}
+ * @return {anychart.sankeyModule.Chart|anychart.data.View}
  */
 anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings) {
   if (goog.isDef(opt_value)) {
