@@ -97,6 +97,7 @@ anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META = (function() {
  * Sets data for sankey chart.
  * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_value Value to set.
  * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
+ * @return {anychart.sankeyModule.Chart|anychart.data.View|anychart.data.Mapping}
  */
 anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings) {
   if (goog.isDef(opt_value)) {
@@ -112,16 +113,18 @@ anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings
       goog.dispose(this.data_);
       this.iterator_ = null;
       if (anychart.utils.instanceOf(opt_value, anychart.data.View))
-        this.data_ = opt_value.derive();
+        this.data_ = (/** @type {anychart.data.View} */ (opt_value)).derive();
       else if (anychart.utils.instanceOf(opt_value, anychart.data.Set))
-        this.data_ = opt_value.mapAs();
+        this.data_ = (/** @type {anychart.data.Set} */ (opt_value)).mapAs();
       else
         this.data_ = new anychart.data.Set(
             (goog.isArray(opt_value) || goog.isString(opt_value)) ? opt_value : null, opt_csvSettings).mapAs();
       this.data_.listenSignals(this.dataInvalidated_, this);
       this.invalidate(anychart.ConsistencyState.SANKEY_DATA, anychart.Signal.NEEDS_REDRAW);
     }
+    return this;
   }
+  return this.data_;
 };
 
 
