@@ -2151,7 +2151,7 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
         axis.suspendSignalsDispatching();
         var width = axis.width();
         if (axis.orientation() == anychart.enums.Orientation.LEFT) {
-          if (!goog.string.startsWith(legend.getOption('position'), 'left')) {
+          if (!legend.getOption('enabled') || !goog.string.startsWith(legend.getOption('position'), 'left')) {
             axis.parentBounds(/** @type {number} */(seriesBounds.left - width - leftPadding), seriesBounds.top, 0, seriesBounds.height);
             leftPadding += width;
           } else {
@@ -2159,7 +2159,7 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
             seriesBounds = axis.getRemainingBounds();
           }
         } else if (axis.orientation() == anychart.enums.Orientation.RIGHT) {
-          if (!goog.string.startsWith(legend.getOption('position'), 'right')) {
+          if (!legend.getOption('enabled') || !goog.string.startsWith(legend.getOption('position'), 'right')) {
             rightPadding += width;
             axis.parentBounds(seriesBounds.left, seriesBounds.top, /** @type {number} */(seriesBounds.width + rightPadding), seriesBounds.height);
           } else {
