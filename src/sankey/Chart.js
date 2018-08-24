@@ -17,11 +17,10 @@ goog.require('anychart.sankeyModule.elements.Node');
  * @constructor
  * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_data Value to set.
  * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
- * @extends {anychart.core.SeparateChart}
+ * @extends {anychart.core.Chart}
  */
 anychart.sankeyModule.Chart = function(opt_data, opt_csvSettings) {
   anychart.sankeyModule.Chart.base(this, 'constructor');
-  this.setType(anychart.enums.ChartTypes.SANKEY);
 
   this.bindHandlersToComponent(this,
       this.handleMouseOverAndMove,    // override from anychart.core.Chart
@@ -37,7 +36,7 @@ anychart.sankeyModule.Chart = function(opt_data, opt_csvSettings) {
 
   this.data(opt_data || null, opt_csvSettings);
 };
-goog.inherits(anychart.sankeyModule.Chart, anychart.core.SeparateChart);
+goog.inherits(anychart.sankeyModule.Chart, anychart.core.Chart);
 
 
 //endregion
@@ -254,6 +253,12 @@ anychart.sankeyModule.Chart.Flow;
  * }}
  */
 anychart.sankeyModule.Chart.Level;
+
+
+/** @inheritDoc */
+anychart.sankeyModule.Chart.prototype.getType = function() {
+  return anychart.enums.ChartTypes.SANKEY;
+};
 
 
 /**

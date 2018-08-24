@@ -3,8 +3,8 @@ goog.provide('anychart.sankeyModule.defaultTheme');
 
 goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
   'sankey': {
-    'nodePadding': 20,
-    'nodeWidth': '12%',
+    'nodePadding': 8,
+    'nodeWidth': 24,
     'curveFactor': 0.33,
     'tooltip': {
       'titleFormat': '{%name}',
