@@ -1254,6 +1254,7 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
     var positionProvider = {'value': {'x': x, 'y': y}};
 
     label = labels.add(formatProvider, positionProvider, index);
+    label.ownSettings.parentBounds = this.parentBounds();
     label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
 
     // var textEl = label.textElement;
@@ -1338,10 +1339,9 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
 
   var positionProvider = {'value': {'x': x, 'y': y}};
 
+  console.log('getLabelBounds_', x, y);
+
   var label = labels.getLabel(index);
-  var parentBounds = /** @type {anychart.math.Rect} */(this.parentBounds());
-  label.parentBounds(parentBounds);
-  labels.parentBounds(parentBounds);
   label.positionProvider(positionProvider);
 
   var labelBounds;
@@ -1429,15 +1429,25 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
  */
 anychart.core.Axis.prototype.dropBoundsCache = function() {
   var labels = /** @type {anychart.core.ui.LabelsFactory} */(this.labels());
-  var isLabels = labels.enabled();
+  var scale = /** @type {anychart.scales.ScatterBase|anychart.scales.Ordinal} */(this.scale());
 
-  if (isLabels) {
-    for (var i = 0, len = labels.labelsCount(); i < len; i++) {
-      var label = labels.getLabel(i);
-      var textEl = label.getTextElement();
-      if (!label.isComplexText() && label.getTextElement()) {
-        textEl.dropBounds();
-        textEl.setPosition(0, 0);
+  // console.log('dropBoundsCache');
+
+  var isLabels = labels.enabled();
+  if (isLabels &&scale) {
+    var scaleTicksArr = scale.ticks().get();
+    var ticksArrLen = scaleTicksArr.length;
+
+    if (isLabels) {
+      for (var i = 0, len = ticksArrLen; i < len; i++) {
+        var label = labels.getLabel(i);
+        if (label) {
+          var textEl = label.getTextElement();
+          if (!label.isComplexText() && textEl) {
+            textEl.dropBounds();
+            textEl.setPosition(0, 0);
+          }
+        }
       }
     }
   }
@@ -1447,6 +1457,8 @@ anychart.core.Axis.prototype.dropBoundsCache = function() {
   this.minorLabelsBounds_.length = 0;
   this.pixelBoundsWithInside = null;
   this.pixelBounds = null;
+
+  this.invalidate(this.ALL_VISUAL_STATES);
 };
 
 

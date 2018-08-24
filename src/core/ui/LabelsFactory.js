@@ -2179,6 +2179,8 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   var formattedPosition = goog.object.clone(positionFormatter.call(positionProvider, positionProvider));
   var position = new goog.math.Coordinate(formattedPosition['x'], formattedPosition['y']);
 
+  console.log(position.x, position.y);
+
   var connectorPoint = positionProvider && positionProvider['connectorPoint'];
   if (this.connector) {
     this.connector.clear();
@@ -2200,6 +2202,8 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   position.x -= anchorCoordinate.x;
   position.y -= anchorCoordinate.y;
 
+  console.log(position.x, position.y);
+
   var offsetXNormalized = goog.isDef(offsetX) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetX), parentWidth) : 0;
   var offsetYNormalized = goog.isDef(offsetY) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetY), parentHeight) : 0;
 
@@ -2219,7 +2223,11 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
   // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
-  if (this.isComplex) {
+
+
+  if (this.isComplexText()) {
+    console.log(bounds, parentBounds);
+    console.log(this.textX + position.x, this.textY + position.y);
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
   } else {
     this.textElement.setPosition(/** @type {number} */(this.textX + position.x), /** @type {number} */(this.textY + position.y));
@@ -2349,10 +2357,15 @@ anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
   }
   if (!this.isComplexText()) {
     var textElement = this.textElement;
-    if (this.needChangeDomElement()) {
+
+    if (this.needChangeDomElement() || (this.layer_ && !this.layer_.parent())) {
       textElement = this.getTextElement();
       var measurementNode = acgraph.getRenderer().createMeasurement();
       textElement.renderTo(measurementNode);
+
+      if (this.simpleTextLayer) {
+        this.simpleTextLayer.content(null);
+      }
     }
 
     var mergedSettings = this.getMergedSettings();
@@ -2472,17 +2485,14 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     //define parent bounds
     var parentWidth, parentHeight;
     this.finalParentBounds = /** @type {anychart.math.Rect} */(this.iterateDrawingPlans_(function(state, settings) {
-      if (anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory)) {
-        var parentBounds = settings.parentBounds();
-        if (parentBounds)
-          return parentBounds;
-      }
+      var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) ? settings.parentBounds() : settings.parentBounds;
+      if (parentBounds)
+        return parentBounds;
     }, true));
 
     if (!this.finalParentBounds) {
-      var parentBounds = this.parentBounds();
-      if ((factory.container() || parentBounds) && isComplex) {
-        this.finalParentBounds = parentBounds ? parentBounds : factory.container().getBounds();
+      if ((factory.container()) && isComplex) {
+        this.finalParentBounds = factory.container().getBounds();
       } else {
         this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
       }
@@ -2709,9 +2719,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
   var isComplexDom = anychart.utils.instanceOf(this.textElement, acgraph.vector.Text);
 
   if (this.needChangeDomElement()) {
-    if (isSimpleDom) {
+    if (isSimpleDom && this.simpleTextLayer) {
       this.simpleTextLayer.parent(null);
-    } else if (isComplexDom) {
+    } else if (isComplexDom && this.textElement) {
       this.textElement.parent(null);
     }
 
