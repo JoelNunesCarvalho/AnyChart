@@ -14,10 +14,6 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
     'node': {
       'normal': {
         'fill': anychart.core.defaultTheme.returnSourceColor,
-        /**
-         * @this {*}
-         * @return {*}
-         */
         'stroke': 'none',
         'labels': {
           'enabled': true,

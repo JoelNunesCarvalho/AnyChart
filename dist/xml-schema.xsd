@@ -127,6 +127,10 @@
             <!-- chart.Sunburst elements -->
             <xsd:element minOccurs="0" maxOccurs="1" name="levels" type="core.SunburstLevels"/>
             <xsd:element minOccurs="0" maxOccurs="1" name="leaves" type="core.SunburstLevel"/>
+            <!-- chart.Sankey elements -->
+            <xsd:element minOccurs="0" maxOccurs="1" name="node" type="core.SankeyVisualElement"/>
+            <xsd:element minOccurs="0" maxOccurs="1" name="flow" type="core.SankeyVisualElement"/>
+            <xsd:element minOccurs="0" maxOccurs="1" name="dropoff" type="core.SankeyVisualElement"/>
         </xsd:all>
         <!-- core.Chart attrs -->
         <xsd:attributeGroup ref="attrs.VisualBase"/>
@@ -254,6 +258,10 @@
         <xsd:attribute name="data_mode" type="enums.WaterfallDataMode"/>
         <!-- chart.Sunburst elements -->
         <xsd:attribute name="calculation_mode" type="enums.CalculationMode" default="ordinal-from-root"/>
+        <!-- chart.Sankey attributes -->
+        <xsd:attribute name="nodeWidth" type="simple.NumberOrPercent" />
+        <xsd:attribute name="nodePadding" type="xsd:double" />
+        <xsd:attribute name="curveFactor" type="simple.Ratio" />
     </xsd:complexType>
 
     <xsd:complexType name="Gauge">
@@ -2882,6 +2890,23 @@
             <xsd:element name="tasks" type="core.Tasks" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="milestones" type="core.Milestones" minOccurs="0" maxOccurs="1"/>
         </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="core.SankeyVisualElement">
+        <xsd:all>
+            <xsd:element name="fill" type="Fill" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="stroke" type="Stroke" minOccurs="0" maxOccurs="1"/>
+
+            <xsd:element name="labels" type="core.LabelsFactory" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="tooltip" type="core.Tooltip" minOccurs="0" maxOccurs="1"/>
+
+            <xsd:element minOccurs="0" maxOccurs="1" name="normal" type="core.StateSettings"/>
+            <xsd:element minOccurs="0" maxOccurs="1" name="hovered" type="core.StateSettings"/>
+        </xsd:all>
+        <xsd:attribute name="fill" type="xsd:string"/>
+        <xsd:attribute name="stroke" type="xsd:string"/>
+        <xsd:attribute name="labels" type="simple.BoolOrNull" default="true"/>
+        <xsd:attribute name="tooltip" type="simple.BoolOrNull" default="true"/>
     </xsd:complexType>
 
     <xsd:complexType name="core.SunburstLevels">

@@ -1385,21 +1385,30 @@ anychart.sankeyModule.Chart.prototype.drawLabel_ = function(source, element, sta
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.serialize = function() {
   var json = anychart.sankeyModule.Chart.base(this, 'serialize');
-  anychart.core.settings.serialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, json);
+
+  json['type'] = this.getType();
+  json['data'] = this.data().serialize();
+  json['tooltip'] = this.tooltip().serialize();
+  json['palette'] = this.palette().serialize();
 
   json['dropoff'] = this.dropoff().serialize();
   json['flow'] = this.flow().serialize();
   json['node'] = this.node().serialize();
 
-  return json;
+  anychart.core.settings.serialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, json);
+
+  return {'chart': json};
 };
 
 
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default) {
   anychart.sankeyModule.Chart.base(this, 'setupByJSON', config, opt_default);
-  anychart.core.settings.deserialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, config, opt_default);
+  this.data(config['data'] || null);
+  this.palette(config['palette']);
 
+  if ('tooltip' in config)
+    this.tooltip().setupInternal(!!opt_default, config['tooltip']);
   if ('dropoff' in config)
     this.dropoff().setupInternal(!!opt_default, config['dropoff']);
   if ('flow' in config)
@@ -1407,6 +1416,7 @@ anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default
   if ('node' in config) {
     this.node().setupInternal(!!opt_default, config['node']);
   }
+  anychart.core.settings.deserialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, config, opt_default);
 };
 
 
