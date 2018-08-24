@@ -15,9 +15,11 @@ goog.require('anychart.sankeyModule.elements.Node');
 /**
  * Sankey chart class.
  * @constructor
+ * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_data Value to set.
+ * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
  * @extends {anychart.core.SeparateChart}
  */
-anychart.sankeyModule.Chart = function() {
+anychart.sankeyModule.Chart = function(opt_data, opt_csvSettings) {
   anychart.sankeyModule.Chart.base(this, 'constructor');
   this.setType(anychart.enums.ChartTypes.SANKEY);
 
@@ -32,6 +34,8 @@ anychart.sankeyModule.Chart = function() {
   anychart.core.settings.createDescriptorsMeta(this.descriptorsMeta, anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META);
 
   this.LABELS_STATE = anychart.ConsistencyState.SANKEY_NODE_LABELS | anychart.ConsistencyState.SANKEY_FLOW_LABELS;
+
+  this.data(opt_data || null, opt_csvSettings);
 };
 goog.inherits(anychart.sankeyModule.Chart, anychart.core.SeparateChart);
 
@@ -1044,7 +1048,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         };
         node.path = path;
 
-        var nodeLeft = (i * levelWidth) + (levelWidth - nodeWidth) / 2;
+        var nodeLeft = bounds.left + (i * levelWidth) + (levelWidth - nodeWidth) / 2;
         var nodeTop = lastTop;
         var nodeRight = nodeLeft + nodeWidth;
         var nodeBottom = nodeTop + nodeHeight;
