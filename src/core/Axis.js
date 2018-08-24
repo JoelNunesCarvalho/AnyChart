@@ -1339,6 +1339,9 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
   var positionProvider = {'value': {'x': x, 'y': y}};
 
   var label = labels.getLabel(index);
+  var parentBounds = /** @type {anychart.math.Rect} */(this.parentBounds());
+  label.parentBounds(parentBounds);
+  labels.parentBounds(parentBounds);
   label.positionProvider(positionProvider);
 
   var labelBounds;

@@ -2480,8 +2480,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     }, true));
 
     if (!this.finalParentBounds) {
-      if (factory.container() && isComplex) {
-        this.finalParentBounds = factory.container().getBounds();
+      var parentBounds = this.parentBounds();
+      if ((factory.container() || parentBounds) && isComplex) {
+        this.finalParentBounds = parentBounds ? parentBounds : factory.container().getBounds();
       } else {
         this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
       }
