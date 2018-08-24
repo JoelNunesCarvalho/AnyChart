@@ -95,6 +95,13 @@ anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META = (function() {
 })();
 
 
+/**
+ * Z-index of a sankey data layer.
+ * @type {number}
+ */
+anychart.sankeyModule.Chart.ZINDEX_SANKEY = 30;
+
+
 //endregion
 //region Data
 /**
@@ -996,8 +1003,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
   if (!this.rootLayer) {
     this.rootLayer = this.rootElement.layer();
+    this.rootLayer.zIndex(anychart.sankeyModule.Chart.ZINDEX_SANKEY);
   }
-
 
   if (this.hasInvalidationState(anychart.ConsistencyState.BOUNDS)) {
     this.rootLayer.removeChildren();
