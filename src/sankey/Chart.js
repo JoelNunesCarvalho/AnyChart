@@ -994,9 +994,13 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
   // calculates everything that can be calculated from data
   this.calculate();
 
+  if (!this.rootLayer) {
+    this.rootLayer = this.rootElement.layer();
+  }
+
 
   if (this.hasInvalidationState(anychart.ConsistencyState.BOUNDS)) {
-    this.rootElement.removeChildren();
+    this.rootLayer.removeChildren();
     this.node_.labels().invalidate(anychart.ConsistencyState.CONTAINER);
     this.flow_.labels().invalidate(anychart.ConsistencyState.CONTAINER);
     this.dropoff_.labels().invalidate(anychart.ConsistencyState.CONTAINER);
@@ -1042,7 +1046,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         var node = level.nodes[j];
         var nodeHeight = node.weight * this.weightAspect;
 
-        var path = this.rootElement.path();
+        var path = this.rootLayer.path();
         path.zIndex(2);
         this.nodePaths.push(path);
 
@@ -1129,7 +1133,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         var fromCoords = fromNode.outcomeCoords[indexFrom];
         var toCoords = toNode.incomeCoords[indexTo];
 
-        path = this.rootElement.path();
+        path = this.rootLayer.path();
         path.zIndex(1);
 
         path.tag = {
@@ -1168,7 +1172,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         var y2 = /** @type {number} */ (fromNode.bottom);
         var y1 = y2 - height;
 
-        path = this.rootElement.path();
+        path = this.rootLayer.path();
         path.zIndex(1);
 
         path.tag = {
@@ -1236,7 +1240,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
   var labelsFormatProvider, labelsPositionProvider, labelIndex;
   if (this.hasInvalidationState(anychart.ConsistencyState.SANKEY_NODE_LABELS)) {
     var labels = this.node_.labels();
-    labels.clear().container(this.rootElement).zIndex(3);
+    labels.clear().container(this.rootLayer).zIndex(3);
 
     for (var name in this.nodes) {
       node = /** @type {anychart.sankeyModule.Chart.Node} */ (this.nodes[name]);
@@ -1262,8 +1266,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     var flowLabels = this.flow_.labels();
     var dropoffLabels = this.dropoff_.labels();
 
-    flowLabels.clear().container(this.rootElement).zIndex(3);
-    dropoffLabels.clear().container(this.rootElement).zIndex(3);
+    flowLabels.clear().container(this.rootLayer).zIndex(3);
+    dropoffLabels.clear().container(this.rootLayer).zIndex(3);
 
     for (dataIndex in this.flows) {
       flow = /** @type {anychart.sankeyModule.Chart.Flow} */ (this.flows[dataIndex]);
