@@ -707,6 +707,10 @@ anychart.sankeyModule.Chart.prototype.colorizeFlow = function(path, state) {
  * @param {anychart.PointState|number} state
  */
 anychart.sankeyModule.Chart.prototype.colorizeDropoff = function(path, state) {
+  var tag = /** @type {Object} */ (path.tag);
+  // sets <state> state color for dropoff
+  this.setFillStroke(this.dropoff_, tag, path, state);
+
   // draws <state> label for dropoff flow
   this.drawLabel_(this.dropoff_, path.tag.flow, state);
 };
