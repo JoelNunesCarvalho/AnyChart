@@ -1284,6 +1284,8 @@ anychart.core.ui.LabelsFactory.Label = function() {
    */
   this.drawingPlan_ = goog.array.slice(this.defaultDrawingPlan_, 0);
 
+  this.isComplex = true;
+
   this.resetSettings();
 
   this.markConsistent(anychart.ConsistencyState.LABELS_FACTORY_CACHE);
@@ -2326,7 +2328,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
 
 
 anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
-  if (this.isComplex)
+  if (goog.isBoolean(this.isComplex))
     return this.isComplex;
 
   var mergedSettings = this.getMergedSettings();
@@ -2708,6 +2710,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 };
 
 
+/**
+ * @param {?boolean} value .
+ */
 anychart.core.ui.LabelsFactory.Label.prototype.setComplex = function(value) {
   this.isComplex = value;
 };

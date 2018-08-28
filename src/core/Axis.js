@@ -1255,6 +1255,7 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
 
     label = labels.add(formatProvider, positionProvider, index);
     label.ownSettings.parentBounds = this.parentBounds();
+    label.setComplex(null);
     label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
 
     // var textEl = label.textElement;

@@ -2565,6 +2565,7 @@ anychart.core.series.Base.prototype.drawSingleFactoryElement = function(factorie
   element.resetSettings();
   if (formatProvider) {
     var label = /** @type {anychart.core.ui.LabelsFactory.Label} */(element);
+    label.setComplex(null);
     settings.unshift(label);
     this.setupLabelDrawingPlan.apply(this, settings);
 
