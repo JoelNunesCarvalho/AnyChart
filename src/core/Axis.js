@@ -1339,14 +1339,14 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
 
   var positionProvider = {'value': {'x': x, 'y': y}};
 
-  console.log('getLabelBounds_', x, y);
-
   var label = labels.getLabel(index);
   label.positionProvider(positionProvider);
 
   var labelBounds;
   var isComplexLabel = label.isComplexText();
   if (isComplexLabel) {
+    label.ownSettings.parentBounds = this.parentBounds();
+    label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
     labelBounds = labels.measure(label, undefined, undefined, index);
   } else {
     var textEl = label.getTextElement();

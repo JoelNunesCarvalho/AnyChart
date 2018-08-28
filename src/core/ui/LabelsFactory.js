@@ -836,6 +836,18 @@ anychart.core.ui.LabelsFactory.prototype.getDimension = function(formatProviderO
     formatProvider = measureLabel.formatProvider();
     positionProvider = opt_positionProvider || measureLabel.positionProvider() || {'value': {'x': 0, 'y': 0}};
     var settings = measureLabel.getMergedSettings();
+
+    parentBounds = /** @type {anychart.math.Rect} */(measureLabel.iterateDrawingPlans(function(state, settings) {
+      var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) ? settings.parentBounds() : settings.parentBounds;
+      if (parentBounds)
+        return parentBounds;
+    }, true));
+
+    if (parentBounds) {
+      parentWidth = parentBounds.width;
+      parentHeight = parentBounds.height;
+    }
+
     isHtml = settings['useHtml'];
     widthSettings = settings['width'];
     heightSettings = settings['height'];
@@ -1495,7 +1507,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.stateOrder = function(nameOrSet, 
  * @return {boolean} .
  */
 anychart.core.ui.LabelsFactory.Label.prototype.checkInvalidationState = function(state) {
-  return /** @type {boolean} */(this.iterateDrawingPlans_(function(stateOrStateName, settings) {
+  return /** @type {boolean} */(this.iterateDrawingPlans(function(stateOrStateName, settings) {
     if (anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label) || anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory)) {
       if (settings.hasInvalidationState(state))
         return true;
@@ -1904,9 +1916,8 @@ anychart.core.ui.LabelsFactory.Label.prototype.getFinalSettings = function(value
  * @param {string=} opt_field .
  * @param {Function=} opt_handler .
  * @return {*}
- * @private
  */
-anychart.core.ui.LabelsFactory.Label.prototype.iterateDrawingPlans_ = function(processor, opt_invert, opt_field, opt_handler) {
+anychart.core.ui.LabelsFactory.Label.prototype.iterateDrawingPlans = function(processor, opt_invert, opt_field, opt_handler) {
   var iterator = opt_invert ? goog.array.forEachRight : goog.array.forEach;
 
   var result = void 0;
@@ -2011,7 +2022,7 @@ anychart.core.ui.LabelsFactory.Label.defaultSettingsProcessor_ = function(state,
  * @private
  */
 anychart.core.ui.LabelsFactory.Label.prototype.resolveSetting_ = function(field, opt_handler) {
-  return this.iterateDrawingPlans_(anychart.core.ui.LabelsFactory.Label.defaultSettingsProcessor_, true, field, opt_handler);
+  return this.iterateDrawingPlans(anychart.core.ui.LabelsFactory.Label.defaultSettingsProcessor_, true, field, opt_handler);
 };
 
 
@@ -2123,7 +2134,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.createSizeMeasureElement_ = funct
   if (isHtml) this.fontSizeMeasureElement_.htmlText(goog.isDef(text) ? String(text) : '');
   else this.fontSizeMeasureElement_.text(goog.isDef(text) ? String(text) : '');
 
-  this.iterateDrawingPlans_(function(state, settings, index) {
+  this.iterateDrawingPlans(function(state, settings, index) {
     var isInit = index == 0;
     if (anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) || anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label)) {
       this.applyTextSettings.call(settings, this.fontSizeMeasureElement_, isInit);
@@ -2179,8 +2190,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   var formattedPosition = goog.object.clone(positionFormatter.call(positionProvider, positionProvider));
   var position = new goog.math.Coordinate(formattedPosition['x'], formattedPosition['y']);
 
-  console.log(position.x, position.y);
-
   var connectorPoint = positionProvider && positionProvider['connectorPoint'];
   if (this.connector) {
     this.connector.clear();
@@ -2202,8 +2211,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   position.x -= anchorCoordinate.x;
   position.y -= anchorCoordinate.y;
 
-  console.log(position.x, position.y);
-
   var offsetXNormalized = goog.isDef(offsetX) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetX), parentWidth) : 0;
   var offsetYNormalized = goog.isDef(offsetY) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetY), parentHeight) : 0;
 
@@ -2223,11 +2230,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
   // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
 
-
-
   if (this.isComplexText()) {
-    console.log(bounds, parentBounds);
-    console.log(this.textX + position.x, this.textY + position.y);
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
   } else {
     this.textElement.setPosition(/** @type {number} */(this.textX + position.x), /** @type {number} */(this.textY + position.y));
@@ -2484,7 +2487,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 
     //define parent bounds
     var parentWidth, parentHeight;
-    this.finalParentBounds = /** @type {anychart.math.Rect} */(this.iterateDrawingPlans_(function(state, settings) {
+    this.finalParentBounds = /** @type {anychart.math.Rect} */(this.iterateDrawingPlans(function(state, settings) {
       var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) ? settings.parentBounds() : settings.parentBounds;
       if (parentBounds)
         return parentBounds;
@@ -2622,7 +2625,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
             mergedSettings['adjustByWidth'],
             mergedSettings['adjustByHeight']);
       } else {
-        calculatedFontSize = this.iterateDrawingPlans_(function(state, settings) {
+        calculatedFontSize = this.iterateDrawingPlans(function(state, settings) {
           if (anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory)) {
             if (goog.isDef(settings.autoSettings['fontSize']))
               return settings.autoSettings['fontSize'];
