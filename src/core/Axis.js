@@ -938,13 +938,12 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
                 if (prevDrawableMinorLabel != -1)
                   bounds4 = this.getLabelBounds_(prevDrawableMinorLabel, false, scaleMinorTicksArr, opt_bounds);
 
-                // var label = this.minorLabels().getLabel(j);
-                // var isLabelEnabled = label ?
-                //     goog.isDef(label.enabled()) ?
-                //         label.enabled() :
-                //         true :
-                //     true;
-                var isLabelEnabled = false;
+                var label = this.minorLabels().getLabel(j);
+                var isLabelEnabled = label ?
+                    goog.isDef(label.enabled()) ?
+                        label.enabled() :
+                        true :
+                    true;
 
                 isLabelInInsideSpace = insideLabelSpace ? !this.hasIntersectionLabelsSpace(insideLabelSpace, bounds1) : true;
                 if (isLabelInInsideSpace &&
@@ -1025,6 +1024,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
       if (!isLabels) overlappedLabels = false;
       this.overlappedLabels_ = {labels: overlappedLabels, minorLabels: overlappedMinorLabels};
     }
+
     this.invalidate(this.ALL_VISUAL_STATES);
     this.markConsistent(anychart.ConsistencyState.AXIS_OVERLAP);
   }
