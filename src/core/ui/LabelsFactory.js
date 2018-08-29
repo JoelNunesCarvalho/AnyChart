@@ -2435,8 +2435,12 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
   }
 
   if (this.checkInvalidationState(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS)) {
+    var isComplex = this.isComplexText();
+
     this.updateComplexSettings();
-    // this.dropMergedSettings();
+    if (isComplex)
+      this.dropMergedSettings();
+
     mergedSettings = this.getMergedSettings();
 
     //define is width and height set from settings
@@ -2447,7 +2451,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     var formatProvider = this.formatProvider();
     var text = String(factory.callFormat(mergedSettings['format'], formatProvider, this.getIndex()));
 
-    var isComplex = this.isComplexText();
     this.layer_.setTransformationMatrix(1, 0, 0, 1, 0, 0);
 
     var bgSettings = mergedSettings['background'];
