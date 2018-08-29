@@ -1432,8 +1432,6 @@ anychart.core.Axis.prototype.dropBoundsCache = function() {
   var labels = /** @type {anychart.core.ui.LabelsFactory} */(this.labels());
   var scale = /** @type {anychart.scales.ScatterBase|anychart.scales.Ordinal} */(this.scale());
 
-  // console.log('dropBoundsCache');
-
   var isLabels = labels.enabled();
   if (isLabels &&scale) {
     var scaleTicksArr = scale.ticks().get();
@@ -1458,8 +1456,6 @@ anychart.core.Axis.prototype.dropBoundsCache = function() {
   this.minorLabelsBounds_.length = 0;
   this.pixelBoundsWithInside = null;
   this.pixelBounds = null;
-
-  this.invalidate(this.ALL_VISUAL_STATES);
 };
 
 
