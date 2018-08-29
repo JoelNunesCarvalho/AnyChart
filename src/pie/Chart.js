@@ -2623,7 +2623,10 @@ anychart.pieModule.Chart.prototype.calcLabelsOverlap = function() {
         var bx = cx + this.radiusValue_ * Math.cos(angle);
         var by = cy + (mode3d ? this.get3DYRadius(this.radiusValue_) : this.radiusValue_) * Math.sin(angle);
 
-        var bounds = label.bounds_.toCoordinateBox();
+        var bounds;
+        if (label.bounds_) {
+          bounds = label.bounds_.toCoordinateBox();
+        }
 
         // if (!this['a' + index])
         //   this['a' + index] = this.container().circle(ax, ay, 4).fill('black .2').stroke('black').zIndex(1000);
