@@ -19,18 +19,18 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
           'enabled': true,
           'format': '{%name}',
           'fontColor': 'black',
-          'fontSize': 14,
+          'fontSize': 10,
           'disablePointerEvents': true
         }
       },
       'hovered': {
-        'fill': anychart.core.defaultTheme.returnDarkenSourceColor
+        'fill': anychart.core.defaultTheme.returnSourceColor
       }
     },
 
     'flow': {
       'normal': {
-        'fill': anychart.core.defaultTheme.returnSourceColor50,
+        'fill': 'grey 0.3',
         'stroke': 'none',
         'labels': {
           'enabled': false,
