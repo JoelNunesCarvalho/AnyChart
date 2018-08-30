@@ -1,6 +1,6 @@
 //region Provide / Require
 goog.provide('anychart.sankeyModule.Chart');
-goog.require('anychart.core.SeparateChart');
+goog.require('anychart.core.Chart');
 goog.require('anychart.core.StateSettings');
 goog.require('anychart.data.Set');
 goog.require('anychart.format.Context');
@@ -291,7 +291,7 @@ anychart.sankeyModule.Chart.prototype.shiftNodeLevels = function(fromNode) {
 /**
  * Creates flow.
  * @param {anychart.sankeyModule.Chart.Node} fromNode
- * @param {anychart.sankeyModule.Chart.Node} toNode
+ * @param {?anychart.sankeyModule.Chart.Node} toNode
  * @param {number} flow
  */
 anychart.sankeyModule.Chart.prototype.createFlow = function(fromNode, toNode, flow) {
@@ -438,8 +438,8 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
     if (this.isMissing_(from, to, flow))
       continue;
 
-    fromNode = this.getNode(from);
-    toNode = this.getNode(to);
+    fromNode = /** @type {anychart.sankeyModule.Chart.Node} */ (this.getNode(from));
+    toNode = /** @type {?anychart.sankeyModule.Chart.Node} */ (this.getNode(to));
     this.createFlow(fromNode, toNode, flow);
   }
   /**
@@ -990,7 +990,7 @@ anychart.sankeyModule.Chart.NODE_COMPARE_FUNCTION = function(node1, node2) {
  * @return {number}
  */
 anychart.sankeyModule.Chart.prototype.nodeCenter = function(node) {
-  return (node.y0 + node.y1) / 2;
+  return (/** @type {number} */ (node.y0) + /** @type {number} */ (node.y1)) / 2;
 };
 
 
@@ -1000,7 +1000,7 @@ anychart.sankeyModule.Chart.prototype.nodeCenter = function(node) {
  * @return {number}
  */
 anychart.sankeyModule.Chart.prototype.weightedFromNodeFlow = function(flow) {
-  return this.nodeCenter(flow.from) * flow.weight;
+  return this.nodeCenter(/** @type {anychart.sankeyModule.Chart.Node} */ (flow.from)) * flow.weight;
 };
 
 
@@ -1010,7 +1010,7 @@ anychart.sankeyModule.Chart.prototype.weightedFromNodeFlow = function(flow) {
  * @return {number}
  */
 anychart.sankeyModule.Chart.prototype.weightedToNodeFlow = function(flow) {
-  return this.nodeCenter(flow.to) * flow.weight;
+  return this.nodeCenter(/** @type {anychart.sankeyModule.Chart.Node} */ (flow.to)) * flow.weight;
 };
 
 
@@ -1021,7 +1021,7 @@ anychart.sankeyModule.Chart.prototype.weightedToNodeFlow = function(flow) {
  * @return {number}
  */
 anychart.sankeyModule.Chart.prototype.ascendingFromNodeFlowY = function(a, b) {
-  return this.ascendingNodeY(a.from, b.from);
+  return this.ascendingNodeY(/** @type {anychart.sankeyModule.Chart.Node} */ (a.from), /** @type {anychart.sankeyModule.Chart.Node} */ (b.from));
 };
 
 
@@ -1032,7 +1032,7 @@ anychart.sankeyModule.Chart.prototype.ascendingFromNodeFlowY = function(a, b) {
  * @return {number}
  */
 anychart.sankeyModule.Chart.prototype.ascendingToNodeFlowY = function(a, b) {
-  return this.ascendingNodeY(a.to, b.to);
+  return this.ascendingNodeY(/** @type {anychart.sankeyModule.Chart.Node} */ (a.to), /** @type {anychart.sankeyModule.Chart.Node} */ (b.to));
 };
 
 
@@ -1079,8 +1079,8 @@ anychart.sankeyModule.Chart.prototype.relaxLeftToRight = function(alpha) {
  * @param {number} alpha
  */
 anychart.sankeyModule.Chart.prototype.relaxRightToLeft = function(alpha) {
-  var levels = this.levels.slice();
-  for (var i = 0; i < levels; i++) {
+  var levels = /** @type {Array.<anychart.sankeyModule.Chart.Level>} */ (this.levels.slice());
+  for (var i = 0; i < levels.length; i++) {
     var level = this.levels[i];
     var nodes = level.nodes;
     for (var j = 0; j < nodes.length; j++) {
@@ -1117,7 +1117,7 @@ anychart.sankeyModule.Chart.prototype.resolveCollisions = function(bounds) {
     var dy;
     var n = nodes.length;
     var i;
-    var nodePadding = this.getOption('nodePadding');
+    var nodePadding = /** @type {number} */ (this.getOption('nodePadding'));
 
     nodes.sort(this.ascendingNodeY);
 
@@ -1162,7 +1162,7 @@ anychart.sankeyModule.Chart.prototype.resolveCollisions = function(bounds) {
 anychart.sankeyModule.Chart.prototype.interpolateNumber = function(a, b) {
   return function(t) {
     return a * (1 - t) + b * t;
-  }
+  };
 };
 
 
@@ -1282,10 +1282,10 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         node: node
       };
       node.path = path;
-      node.x0 = anychart.utils.applyPixelShift(node.x0, 1);
-      node.y0 = anychart.utils.applyPixelShift(node.y0, 1);
-      node.x1 = anychart.utils.applyPixelShift(node.x1, 1);
-      node.y1 = anychart.utils.applyPixelShift(node.y1, 1);
+      node.x0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x0), 1);
+      node.y0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.y0), 1);
+      node.x1 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x1), 1);
+      node.y1 = anychart.utils.applyPixelShift(/** @type {number} */ (node.y1), 1);
 
       path
           .moveTo(node.x0, node.y0)
@@ -1311,10 +1311,10 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
         flow.path = path;
 
-        x0 = flow.from.x1;
-        x1 = flow.to.x0;
-        y0 = flow.y0;
-        y1 = flow.y1;
+        x0 = /** @type {number} */ (flow.from.x1);
+        x1 = /** @type {number} */ (flow.to.x0);
+        y0 = /** @type {number} */ (flow.y0);
+        y1 = /** @type {number} */ (flow.y1);
 
         xi = this.interpolateNumber(x0, x1);
         x2 = xi(curveFactor);
