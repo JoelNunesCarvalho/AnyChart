@@ -3,8 +3,8 @@ goog.provide('anychart.sankeyModule.defaultTheme');
 
 goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
   'sankey': {
-    'nodePadding': 20,
-    'nodeWidth': '12%',
+    'nodePadding': 8,
+    'nodeWidth': 24,
     'curveFactor': 0.33,
     'tooltip': {
       'titleFormat': '{%name}',
@@ -14,29 +14,23 @@ goog.mixin(goog.global['anychart']['themes']['defaultTheme'], {
     'node': {
       'normal': {
         'fill': anychart.core.defaultTheme.returnSourceColor,
-        /**
-         * @this {*}
-         * @return {*}
-         */
-        'stroke': function() {
-          return this['conflict'] ? '2 red' : 'none';
-        },
+        'stroke': 'none',
         'labels': {
           'enabled': true,
           'format': '{%name}',
           'fontColor': 'black',
-          'fontSize': 14,
+          'fontSize': 10,
           'disablePointerEvents': true
         }
       },
       'hovered': {
-        'fill': anychart.core.defaultTheme.returnDarkenSourceColor
+        'fill': anychart.core.defaultTheme.returnSourceColor
       }
     },
 
     'flow': {
       'normal': {
-        'fill': anychart.core.defaultTheme.returnSourceColor50,
+        'fill': 'grey 0.3',
         'stroke': 'none',
         'labels': {
           'enabled': false,

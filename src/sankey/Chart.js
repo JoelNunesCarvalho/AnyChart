@@ -1,6 +1,6 @@
 //region Provide / Require
 goog.provide('anychart.sankeyModule.Chart');
-goog.require('anychart.core.SeparateChart');
+goog.require('anychart.core.Chart');
 goog.require('anychart.core.StateSettings');
 goog.require('anychart.data.Set');
 goog.require('anychart.format.Context');
@@ -15,11 +15,12 @@ goog.require('anychart.sankeyModule.elements.Node');
 /**
  * Sankey chart class.
  * @constructor
- * @extends {anychart.core.SeparateChart}
+ * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_data Value to set.
+ * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
+ * @extends {anychart.core.Chart}
  */
-anychart.sankeyModule.Chart = function() {
+anychart.sankeyModule.Chart = function(opt_data, opt_csvSettings) {
   anychart.sankeyModule.Chart.base(this, 'constructor');
-  this.setType(anychart.enums.ChartTypes.SANKEY);
 
   this.bindHandlersToComponent(this,
       this.handleMouseOverAndMove,    // override from anychart.core.Chart
@@ -27,13 +28,18 @@ anychart.sankeyModule.Chart = function() {
       null,                           // click handler
       this.handleMouseOverAndMove,    // override from anychart.core.Chart
       null,                           // all handler
-      this.handleMouseDown);          // anychart.core.Chart
+      null);                          // anychart.core.Chart
 
   anychart.core.settings.createDescriptorsMeta(this.descriptorsMeta, anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META);
 
   this.LABELS_STATE = anychart.ConsistencyState.SANKEY_NODE_LABELS | anychart.ConsistencyState.SANKEY_FLOW_LABELS;
+
+  this.data(opt_data || null, opt_csvSettings);
+
+  this.ascendingToNodeFlowY = goog.bind(this.ascendingToNodeFlowY, this);
+  this.ascendingFromNodeFlowY = goog.bind(this.ascendingFromNodeFlowY, this);
 };
-goog.inherits(anychart.sankeyModule.Chart, anychart.core.SeparateChart);
+goog.inherits(anychart.sankeyModule.Chart, anychart.core.Chart);
 
 
 //endregion
@@ -42,7 +48,7 @@ goog.inherits(anychart.sankeyModule.Chart, anychart.core.SeparateChart);
  * Supported signals.
  * @type {number}
  */
-anychart.sankeyModule.Chart.prototype.SUPPORTED_SIGNALS = anychart.core.SeparateChart.prototype.SUPPORTED_SIGNALS;
+anychart.sankeyModule.Chart.prototype.SUPPORTED_SIGNALS = anychart.core.Chart.prototype.SUPPORTED_SIGNALS;
 
 
 /**
@@ -50,7 +56,7 @@ anychart.sankeyModule.Chart.prototype.SUPPORTED_SIGNALS = anychart.core.Separate
  * @type {number}
  */
 anychart.sankeyModule.Chart.prototype.SUPPORTED_CONSISTENCY_STATES =
-    anychart.core.SeparateChart.prototype.SUPPORTED_CONSISTENCY_STATES |
+    anychart.core.Chart.prototype.SUPPORTED_CONSISTENCY_STATES |
     anychart.ConsistencyState.SANKEY_DATA |
     anychart.ConsistencyState.SANKEY_NODE_LABELS |
     anychart.ConsistencyState.SANKEY_FLOW_LABELS |
@@ -91,12 +97,20 @@ anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META = (function() {
 })();
 
 
+/**
+ * Z-index of a sankey data layer.
+ * @type {number}
+ */
+anychart.sankeyModule.Chart.ZINDEX_SANKEY = 30;
+
+
 //endregion
 //region Data
 /**
  * Sets data for sankey chart.
  * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_value Value to set.
  * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
+ * @return {anychart.sankeyModule.Chart|anychart.data.View}
  */
 anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings) {
   if (goog.isDef(opt_value)) {
@@ -112,16 +126,18 @@ anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings
       goog.dispose(this.data_);
       this.iterator_ = null;
       if (anychart.utils.instanceOf(opt_value, anychart.data.View))
-        this.data_ = opt_value.derive();
+        this.data_ = (/** @type {anychart.data.View} */ (opt_value)).derive();
       else if (anychart.utils.instanceOf(opt_value, anychart.data.Set))
-        this.data_ = opt_value.mapAs();
+        this.data_ = (/** @type {anychart.data.Set} */ (opt_value)).mapAs();
       else
         this.data_ = new anychart.data.Set(
             (goog.isArray(opt_value) || goog.isString(opt_value)) ? opt_value : null, opt_csvSettings).mapAs();
       this.data_.listenSignals(this.dataInvalidated_, this);
       this.invalidate(anychart.ConsistencyState.SANKEY_DATA, anychart.Signal.NEEDS_REDRAW);
     }
+    return this;
   }
+  return this.data_;
 };
 
 
@@ -174,7 +190,7 @@ anychart.sankeyModule.Chart.prototype.isMissing_ = function(from, to, flow) {
   var valueMissing = !(goog.isNumber(flow) && flow > 0);
   var fromMissing = !(goog.isString(from) && from.length > 0);
   var toMissing = !goog.isNull(to) && !(goog.isString(to) && to.length > 0);
-  return valueMissing && fromMissing && toMissing;
+  return valueMissing || fromMissing || toMissing;
 };
 
 
@@ -199,6 +215,10 @@ anychart.sankeyModule.Chart.prototype.isMissing_ = function(from, to, flow) {
  *   incomeFlows: Array.<anychart.sankeyModule.Chart.Flow>,
  *   outcomeFlows: Array.<anychart.sankeyModule.Chart.Flow>,
  *   conflict: boolean,
+ *   x0: (number|undefined),
+ *   y0: (number|undefined),
+ *   x1: (number|undefined),
+ *   y1: (number|undefined),
  *   top: (number|undefined),
  *   right: (number|undefined),
  *   bottom: (number|undefined),
@@ -225,6 +245,8 @@ anychart.sankeyModule.Chart.Node;
  *   rightTop: ({x: number, y: number}|undefined),
  *   rightBottom: ({x: number, y: number}|undefined),
  *   leftBottom: ({x: number, y: number}|undefined),
+ *   y0: (number|undefined),
+ *   y1: (number|undefined),
  *   path: (acgraph.vector.Path|undefined),
  *   label: (anychart.core.ui.LabelsFactory.Label|undefined)
  * }}
@@ -235,11 +257,17 @@ anychart.sankeyModule.Chart.Flow;
 /**
  * @typedef {{
  *   nodes: Array.<anychart.sankeyModule.Chart.Node>,
- *   weightsSum: number,
+ *   weight: number,
  *   top: number
  * }}
  */
 anychart.sankeyModule.Chart.Level;
+
+
+/** @inheritDoc */
+anychart.sankeyModule.Chart.prototype.getType = function() {
+  return anychart.enums.ChartTypes.SANKEY;
+};
 
 
 /**
@@ -250,10 +278,12 @@ anychart.sankeyModule.Chart.prototype.shiftNodeLevels = function(fromNode) {
   var toNodes = fromNode.outcomeNodes;
   for (var i = 0; i < toNodes.length; i++) {
     var toNode = toNodes[i];
-    if (fromNode.level <= toNode.level) {
+    if (fromNode.level >= toNode.level) {
       toNode.level = fromNode.level + 1;
       this.shiftNodeLevels(toNode);
     }
+    if (toNode.level > this.lastLevel)
+      this.lastLevel = toNode.level;
   }
 };
 
@@ -261,7 +291,7 @@ anychart.sankeyModule.Chart.prototype.shiftNodeLevels = function(fromNode) {
 /**
  * Creates flow.
  * @param {anychart.sankeyModule.Chart.Node} fromNode
- * @param {anychart.sankeyModule.Chart.Node} toNode
+ * @param {?anychart.sankeyModule.Chart.Node} toNode
  * @param {number} flow
  */
 anychart.sankeyModule.Chart.prototype.createFlow = function(fromNode, toNode, flow) {
@@ -279,6 +309,9 @@ anychart.sankeyModule.Chart.prototype.createFlow = function(fromNode, toNode, fl
     fromNode.outcomeValue += flow;
     fromNode.outcomeValues.push(flow);
     fromNode.outcomeNodes.push(toNode);
+
+    if (isNaN(toNode.incomeValue))
+      toNode.incomeValue = 0;
 
     toNode.incomeValue += flow;
     toNode.incomeValues.push(flow);
@@ -303,6 +336,55 @@ anychart.sankeyModule.Chart.prototype.createDropOffFlow = function(fromNode, flo
   fromNode.outcomeValue += flow;
   fromNode.dropoffValue += flow;
   fromNode.dropoffValues.push(flow);
+};
+
+
+/**
+ * Returns node by name.
+ * @param {?string} name Node name or null in case of dropoff
+ * @return {?anychart.sankeyModule.Chart.Node}
+ */
+anychart.sankeyModule.Chart.prototype.getNode = function(name) {
+  if (name === null)
+    return null;
+
+  if (!this.nodes[name]) {
+    this.nodes[name] = {
+      name: /** @type {string} */ (name),
+      level: 0,
+      incomeValue: 0,
+      outcomeValue: 0,
+      dropoffValue: 0,
+      incomeNodes: [],
+      outcomeNodes: [],
+      incomeValues: [],
+      outcomeValues: [],
+      dropoffValues: [],
+      incomeCoords: [],
+      outcomeCoords: [],
+      incomeFlows: [],
+      outcomeFlows: [],
+      conflict: false
+    };
+  }
+  return this.nodes[name];
+};
+
+
+/**
+ * Returns level by it's number.
+ * @param {number} levelNumber
+ * @return {anychart.sankeyModule.Chart.Level}
+ */
+anychart.sankeyModule.Chart.prototype.getLevel = function(levelNumber) {
+  if (!this.levels[levelNumber]) {
+    this.levels[levelNumber] = {
+      nodes: [],
+      weight: 0,
+      top: NaN
+    };
+  }
+  return this.levels[levelNumber];
 };
 
 
@@ -352,54 +434,12 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
   while (iterator.advance()) {
     from = /** @type {string} */ (iterator.get('from'));
     to = /** @type {string} */ (iterator.get('to'));
-    flow = /** @type {number} */ (iterator.get('flow'));
+    flow = /** @type {number} */ (anychart.utils.toNumber(iterator.get('flow')));
     if (this.isMissing_(from, to, flow))
       continue;
 
-    fromNode = this.nodes[from];
-    if (!fromNode) {
-      this.nodes[from] = fromNode = {
-        name: from,
-        level: 0,
-        incomeValue: NaN,
-        outcomeValue: 0,
-        dropoffValue: 0,
-        incomeNodes: [],
-        outcomeNodes: [],
-        incomeValues: [],
-        outcomeValues: [],
-        dropoffValues: [],
-        incomeCoords: [],
-        outcomeCoords: [],
-        incomeFlows: [],
-        outcomeFlows: [],
-        conflict: false
-      };
-    }
-    if (to === null) {
-      toNode = null;
-    } else {
-      toNode = this.nodes[to];
-      if (!toNode) {
-        this.nodes[to] = toNode = {
-          name: /** @type {!string} */ (to),
-          level: -1,
-          incomeValue: 0,
-          outcomeValue: 0,
-          dropoffValue: 0,
-          incomeNodes: [],
-          outcomeNodes: [],
-          incomeValues: [],
-          outcomeValues: [],
-          dropoffValues: [],
-          incomeCoords: [],
-          outcomeCoords: [],
-          incomeFlows: [],
-          outcomeFlows: [],
-          conflict: false
-        };
-      }
-    }
+    fromNode = /** @type {anychart.sankeyModule.Chart.Node} */ (this.getNode(from));
+    toNode = /** @type {?anychart.sankeyModule.Chart.Node} */ (this.getNode(to));
     this.createFlow(fromNode, toNode, flow);
   }
   /**
@@ -409,67 +449,35 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
   this.levels = [];
 
   this.setAsLast = true;
-  this.maxLevelWeight = 0;
-
-  /** @type {number} */
-  var levelNumber;
 
   /** @type {anychart.sankeyModule.Chart.Level} */
   var level;
 
   for (var name in this.nodes) {
     var node = this.nodes[name];
+    node.weight = Math.max(node.incomeValue, node.outcomeValue);
 
+    // if there any outcome flow
     var outLength = node.outcomeNodes.length + node.dropoffValues.length;
 
     // place node without outcome nodes at last level
     if (this.setAsLast && !outLength)
       node.level = this.lastLevel;
 
-    // check whether node in confict
+    // check whether node in confict (first and last nodes can't be conflict)
     if (node.incomeNodes.length && outLength) {
       node.conflict = (node.incomeValue != node.outcomeValue);
     }
 
-    // first-level node
-    if (isNaN(node.incomeValue))
-      node.weight = node.outcomeValue;
-    // last level node (nor outcome nor dropoff)
-    else if (!outLength)
-      node.weight = node.incomeValue;
-    // other nodes
-    else
-      node.weight = Math.max(node.incomeValue, node.outcomeValue);
-
-    levelNumber = node.level;
-    level = this.levels[levelNumber];
-    if (!this.levels[levelNumber]) {
-      this.levels[levelNumber] = level = {
-        nodes: [],
-        weightsSum: 0,
-        top: NaN
-      };
-    }
+    level = this.getLevel(node.level);
     level.nodes.push(node);
-    level.weightsSum += node.weight;
-    // calculating max level weight
-    if (level.weightsSum > this.maxLevelWeight) {
-      this.maxLevelWeight = level.weightsSum;
-    }
+    level.weight += node.weight;
   }
 
-  this.maxNodesCount = 0;
-  this.maxLevel = 0;
   var linearId = 0;
   for (var i = 0; i < this.levels.length; i++) {
     level = this.levels[i];
-
-    var nodesLength = level.nodes.length;
-    if ((level.weightsSum == this.maxLevelWeight) && (nodesLength > this.maxNodesCount)) {
-      this.maxNodesCount = nodesLength;
-      this.maxLevel = i;
-    }
-    for (var j = 0; j < nodesLength; j++) {
+    for (var j = 0; j < level.nodes.length; j++) {
       level.nodes[j].id = linearId++;
     }
   }
@@ -696,8 +704,12 @@ anychart.sankeyModule.Chart.prototype.colorizeFlow = function(path, state) {
  * @param {anychart.PointState|number} state
  */
 anychart.sankeyModule.Chart.prototype.colorizeDropoff = function(path, state) {
+  var tag = /** @type {Object} */ (path.tag);
+  // sets <state> state color for dropoff
+  this.setFillStroke(this.dropoff_, tag, path, state);
+
   // draws <state> label for dropoff flow
-  this.drawLabel_(this.dropoff_, path.tag.flow, state);
+  this.drawLabel_(this.dropoff_, tag.flow, state);
 };
 
 
@@ -773,7 +785,7 @@ anychart.sankeyModule.Chart.prototype.elementInvalidated_ = function(event) {
 
 
 /**
- * TODO: add docs
+ * Dropoff element settings.
  * @param {Object=} opt_value
  * @return {anychart.sankeyModule.elements.Dropoff|anychart.sankeyModule.Chart}
  */
@@ -791,7 +803,7 @@ anychart.sankeyModule.Chart.prototype.dropoff = function(opt_value) {
 
 
 /**
- * TODO: add docs
+ * Flow element settings.
  * @param {Object=} opt_value
  * @return {anychart.sankeyModule.elements.Flow|anychart.sankeyModule.Chart}
  */
@@ -809,7 +821,7 @@ anychart.sankeyModule.Chart.prototype.flow = function(opt_value) {
 
 
 /**
- * TODO: add docs
+ * Node element settings.
  * @param {Object=} opt_value
  * @return {anychart.sankeyModule.elements.Node|anychart.sankeyModule.Chart}
  */
@@ -895,7 +907,7 @@ anychart.sankeyModule.Chart.prototype.paletteInvalidated_ = function(event) {
  * @return {Object}
  */
 anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag) {
-  var from, to, node;
+  var from, to, node, flow;
   var type = tag.type;
   var palette = this.palette();
 
@@ -908,7 +920,7 @@ anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag) 
       'conflict': node.conflict
     };
   } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) { // flow
-    var flow = tag.flow;
+    flow = tag.flow;
     from = flow.from;
     to = flow.to;
     return {
@@ -917,10 +929,11 @@ anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag) 
       'sourceColor': palette.itemAt(from.id)
     };
   } else { // dropoff
-    from = tag.from;
+    flow = tag.flow;
+    node = flow.from;
     return {
-      'from': from.name,
-      'sourceColor': palette.itemAt(from.id)
+      'from': node.name,
+      'sourceColor': palette.itemAt(node.id)
     };
   }
 };
@@ -971,6 +984,188 @@ anychart.sankeyModule.Chart.NODE_COMPARE_FUNCTION = function(node1, node2) {
 };
 
 
+/**
+ * Returns node center y coordinate.
+ * @param {anychart.sankeyModule.Chart.Node} node
+ * @return {number}
+ */
+anychart.sankeyModule.Chart.prototype.nodeCenter = function(node) {
+  return (/** @type {number} */ (node.y0) + /** @type {number} */ (node.y1)) / 2;
+};
+
+
+/**
+ * Weighted flow by from node.
+ * @param {anychart.sankeyModule.Chart.Flow} flow
+ * @return {number}
+ */
+anychart.sankeyModule.Chart.prototype.weightedFromNodeFlow = function(flow) {
+  return this.nodeCenter(/** @type {anychart.sankeyModule.Chart.Node} */ (flow.from)) * flow.weight;
+};
+
+
+/**
+ * Weighted flow by to node.
+ * @param {anychart.sankeyModule.Chart.Flow} flow
+ * @return {number}
+ */
+anychart.sankeyModule.Chart.prototype.weightedToNodeFlow = function(flow) {
+  return this.nodeCenter(/** @type {anychart.sankeyModule.Chart.Node} */ (flow.to)) * flow.weight;
+};
+
+
+/**
+ * Sort function for "from" node.
+ * @param {anychart.sankeyModule.Chart.Flow} a
+ * @param {anychart.sankeyModule.Chart.Flow} b
+ * @return {number}
+ */
+anychart.sankeyModule.Chart.prototype.ascendingFromNodeFlowY = function(a, b) {
+  return this.ascendingNodeY(/** @type {anychart.sankeyModule.Chart.Node} */ (a.from), /** @type {anychart.sankeyModule.Chart.Node} */ (b.from));
+};
+
+
+/**
+ * Sort function for "to" node.
+ * @param {anychart.sankeyModule.Chart.Flow} a
+ * @param {anychart.sankeyModule.Chart.Flow} b
+ * @return {number}
+ */
+anychart.sankeyModule.Chart.prototype.ascendingToNodeFlowY = function(a, b) {
+  return this.ascendingNodeY(/** @type {anychart.sankeyModule.Chart.Node} */ (a.to), /** @type {anychart.sankeyModule.Chart.Node} */ (b.to));
+};
+
+
+/**
+ * Sort function for node.
+ * @param {anychart.sankeyModule.Chart.Node} a
+ * @param {anychart.sankeyModule.Chart.Node} b
+ * @return {number}
+ */
+anychart.sankeyModule.Chart.prototype.ascendingNodeY = function(a, b) {
+  return a.y0 - b.y0;
+};
+
+
+/**
+ * @param {number} alpha
+ */
+anychart.sankeyModule.Chart.prototype.relaxLeftToRight = function(alpha) {
+  for (var i = 0; i < this.levels.length; i++) {
+    var level = this.levels[i];
+    var nodes = level.nodes;
+    for (var j = 0; j < nodes.length; j++) {
+      var node = nodes[j];
+      if (node.incomeFlows.length) {
+
+        var sum1 = goog.array.reduce(node.incomeFlows, function(prev, flow) {
+          return prev + this.weightedFromNodeFlow(flow);
+        }, 0, this);
+
+        var sum2 = goog.array.reduce(node.incomeFlows, function(prev, flow) {
+          return prev + flow.weight;
+        }, 0, this);
+
+        var dy = (sum1 / sum2 - this.nodeCenter(node)) * alpha;
+        node.y0 += dy;
+        node.y1 += dy;
+      }
+    }
+  }
+};
+
+
+/**
+ * @param {number} alpha
+ */
+anychart.sankeyModule.Chart.prototype.relaxRightToLeft = function(alpha) {
+  var levels = /** @type {Array.<anychart.sankeyModule.Chart.Level>} */ (this.levels.slice());
+  for (var i = 0; i < levels.length; i++) {
+    var level = this.levels[i];
+    var nodes = level.nodes;
+    for (var j = 0; j < nodes.length; j++) {
+      var node = nodes[j];
+      if (node.outcomeFlows.length) {
+
+        var sum1 = goog.array.reduce(node.outcomeFlows, function(prev, flow) {
+          return prev + this.weightedToNodeFlow(flow);
+        }, 0, this);
+
+        var sum2 = goog.array.reduce(node.outcomeFlows, function(prev, flow) {
+          return prev + flow.weight;
+        }, 0, this);
+
+        var dy = (sum1 / sum2 - this.nodeCenter(node)) * alpha;
+        node.y0 += dy;
+        node.y1 += dy;
+      }
+    }
+  }
+};
+
+
+/**
+ * Resolve collisions between nodes.
+ * @param {anychart.math.Rect} bounds
+ */
+anychart.sankeyModule.Chart.prototype.resolveCollisions = function(bounds) {
+  for (var k = 0; k < this.levels.length; k++) {
+    var level = this.levels[k];
+    var nodes = level.nodes;
+    var node;
+    var y = bounds.top;
+    var dy;
+    var n = nodes.length;
+    var i;
+    var nodePadding = /** @type {number} */ (this.getOption('nodePadding'));
+
+    nodes.sort(this.ascendingNodeY);
+
+    for (i = 0; i < n; ++i) {
+      node = nodes[i];
+      dy = y - node.y0;
+      if (dy > 0) {
+        node.y0 += dy;
+        node.y1 += dy;
+      }
+      y = node.y1 + nodePadding;
+    }
+
+    // If the bottommost node goes outside the bounds, push it back up.
+    dy = y - nodePadding - bounds.height;
+    if (dy > 0) {
+      node.y0 = node.y0 - dy;
+      node.y1 = node.y1 - dy;
+      y = node.y0;
+
+      // Push any overlapping nodes back up.
+      for (i = n - 2; i >= 0; --i) {
+        node = nodes[i];
+        dy = node.y1 + nodePadding - y;
+        if (dy > 0) {
+          node.y0 = node.y0 - dy;
+          node.y1 = node.y1 - dy;
+        }
+        y = node.y0;
+      }
+    }
+  }
+};
+
+
+/**
+ * Interpolator.
+ * @param {number} a
+ * @param {number} b
+ * @return {Function}
+ */
+anychart.sankeyModule.Chart.prototype.interpolateNumber = function(a, b) {
+  return function(t) {
+    return a * (1 - t) + b * t;
+  };
+};
+
+
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
   if (this.isConsistent())
@@ -979,9 +1174,13 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
   // calculates everything that can be calculated from data
   this.calculate();
 
+  if (!this.rootLayer) {
+    this.rootLayer = this.rootElement.layer();
+    this.rootLayer.zIndex(anychart.sankeyModule.Chart.ZINDEX_SANKEY);
+  }
 
   if (this.hasInvalidationState(anychart.ConsistencyState.BOUNDS)) {
-    this.rootElement.removeChildren();
+    this.rootLayer.removeChildren();
     this.node_.labels().invalidate(anychart.ConsistencyState.CONTAINER);
     this.flow_.labels().invalidate(anychart.ConsistencyState.CONTAINER);
     this.dropoff_.labels().invalidate(anychart.ConsistencyState.CONTAINER);
@@ -989,43 +1188,227 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     this.nodePaths = [];
     this.flowPaths = [];
 
-    var level;
-    var levelsCount = this.levels.length;
-    var levelWidth = bounds.width / levelsCount;
+    var level, nodes;
+    var levelsCount, levelWidth;
+    var dropOffPadding;
+    var lastNodeDropOffPadding;
 
-    var baseNodePadding = /** @type {number} */ (this.getOption('nodePadding'));
+    var flow, node;
+
+    var nodePadding = /** @type {number} */ (this.getOption('nodePadding'));
     var nodeWidth = /** @type {string|number} */ (this.getOption('nodeWidth'));
-    nodeWidth = anychart.utils.normalizeSize(nodeWidth, levelWidth);
-    var dropOffPadding = nodeWidth * 0.3;
 
-    // if we have dropoff on last node we should count it in calculations to show it correctly
-    var lastNodeDropOffPadding = this.levels[this.maxLevel].nodes[this.maxNodesCount - 1].dropoffValue ? dropOffPadding : 0;
-    this.weightAspect = (bounds.height - (this.maxNodesCount - 1) * baseNodePadding - lastNodeDropOffPadding) / this.maxLevelWeight;
-
-    var nodesPerLevel;
-    var levelPadding = baseNodePadding;
+    if (this.levels.length) {
+      levelsCount = this.levels.length;
+      levelWidth = bounds.width / levelsCount;
+      nodeWidth = anychart.utils.normalizeSize(nodeWidth, levelWidth);
+      dropOffPadding = nodeWidth * 0.3;
+    } else {
+      levelWidth = nodeWidth = dropOffPadding = 0;
+    }
+    var emptyLevelSpace = levelWidth - nodeWidth;
 
     var i, j;
+
+    var weightAspects = [], aspect;
     for (i = 0; i < this.levels.length; i++) {
       level = this.levels[i];
-      nodesPerLevel = level.nodes.length;
-      var pixelHeight = level.weightsSum * this.weightAspect;
-      lastNodeDropOffPadding = level.nodes[nodesPerLevel - 1].dropoffValue ? dropOffPadding : 0;
+      nodes = level.nodes;
+      lastNodeDropOffPadding = nodes[nodes.length - 1].dropoffValue ? dropOffPadding : 0;
+      aspect = (bounds.height - bounds.top - lastNodeDropOffPadding - nodePadding * (nodes.length - 1)) / level.weight;
+      weightAspects.push(aspect);
+    }
+    this.weightAspect = Math.min.apply(null, weightAspects);
 
-      var height = (nodesPerLevel - 1) * levelPadding + pixelHeight + lastNodeDropOffPadding;
+    for (i = 0; i < this.levels.length; i++) {
+      level = this.levels[i];
+      nodes = level.nodes;
+      for (j = 0; j < nodes.length; j++) {
+        node = nodes[j];
+        node.x0 = node.level * levelWidth + emptyLevelSpace / 2;
+        node.x1 = node.x0 + nodeWidth;
+        node.y0 = j;
+        node.y1 = node.y0 + node.weight * this.weightAspect;
+      }
+    }
+
+    for (var dataIndex in this.flows) {
+      flow = this.flows[dataIndex];
+      flow.height = flow.weight * this.weightAspect;
+    }
+
+    this.resolveCollisions(bounds);
+    for (var alpha = 1, n = 32; n > 0; --n) {
+      alpha = alpha * 0.99;
+      this.relaxRightToLeft(alpha);
+      this.resolveCollisions(bounds);
+      this.relaxLeftToRight(alpha);
+      this.resolveCollisions(bounds);
+    }
+
+    for (name in this.nodes) {
+      node = this.nodes[name];
+      node.outcomeFlows.sort(this.ascendingToNodeFlowY);
+      node.incomeFlows.sort(this.ascendingFromNodeFlowY);
+    }
+
+    var x0, x1, x2, x3, xi, y0, y1, y2;
+    for (name in this.nodes) {
+      node = this.nodes[name];
+      y0 = y1 = node.y0;
+
+      for (i = 0; i < node.outcomeFlows.length; i++) {
+        flow = node.outcomeFlows[i];
+        flow.y0 = y0 + flow.height / 2;
+        y0 += flow.height;
+      }
+
+      for (i = 0; i < node.incomeFlows.length; i++) {
+        flow = node.incomeFlows[i];
+        flow.y1 = y1 + flow.height / 2;
+        y1 += flow.height;
+      }
+    }
+
+    var path;
+    for (name in this.nodes) {
+      node = this.nodes[name];
+      path = this.rootLayer.path();
+      path.zIndex(2);
+      this.nodePaths.push(path);
+
+      path.tag = {
+        type: anychart.sankeyModule.Chart.ElementType.NODE,
+        node: node
+      };
+      node.path = path;
+      node.x0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x0), 1);
+      node.y0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.y0), 1);
+      node.x1 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x1), 1);
+      node.y1 = anychart.utils.applyPixelShift(/** @type {number} */ (node.y1), 1);
+
+      path
+          .moveTo(node.x0, node.y0)
+          .lineTo(node.x1, node.y0)
+          .lineTo(node.x1, node.y1)
+          .lineTo(node.x0, node.y1)
+          .lineTo(node.x0, node.y0)
+          .close();
+    }
+
+    var curveFactor = /** @type {number} */ (this.getOption('curveFactor'));
+    for (dataIndex in this.flows) {
+      flow = this.flows[dataIndex];
+      if (flow.to) {
+        path = this.rootLayer.path();
+        path.zIndex(1);
+        this.flowPaths.push(path);
+
+        path.tag = {
+          type: anychart.sankeyModule.Chart.ElementType.FLOW,
+          flow: flow
+        };
+
+        flow.path = path;
+
+        x0 = /** @type {number} */ (flow.from.x1);
+        x1 = /** @type {number} */ (flow.to.x0);
+        y0 = /** @type {number} */ (flow.y0);
+        y1 = /** @type {number} */ (flow.y1);
+
+        xi = this.interpolateNumber(x0, x1);
+        x2 = xi(curveFactor);
+        x3 = xi(1 - curveFactor);
+
+        var halfHeight = flow.height / 2;
+
+        flow['left'] = x0;
+        flow['right'] = x1;
+        flow['topCenter'] = (y0 + y1) / 2 - halfHeight;
+        flow['leftTop'] = {x: x0, y: y0 - halfHeight};
+        flow['rightTop'] = {x: x1, y: y1 - halfHeight};
+
+        var y0top = y0 - halfHeight;
+        var y1top = y1 - halfHeight;
+        var y0bot = y0 + halfHeight;
+        var y1bot = y1 + halfHeight;
+
+        path
+            .moveTo(x0, y0top)
+            .curveTo(x2, y0top, x3, y1top, x1, y1top)
+            .lineTo(x1, y1bot)
+            .curveTo(x3, y1bot, x2, y0bot, x0, y0bot)
+            .lineTo(x0, y0top);
+
+        /*path
+            .moveTo(x0, y0top)
+            .curveTo(x2, y0top, x3, y1top, x1, y1top)
+            .lineTo(x1, y1bot)
+            .moveTo(x0, y0top)
+            .lineTo(x0, y0bot)
+            //.moveTo(x0, y0 + halfHeight)
+            .curveTo(x2, y0bot, x3, y1bot, x1, y1bot);*/
+
+      } else {
+        // dropoff flow
+        var height = flow.from.dropoffValue * this.weightAspect;
+        var radius = Math.min(height, nodeWidth / 4);
+
+        x0 = flow.from.x1;
+        x1 = x0 + radius;
+        y2 = flow.from.y1;
+        y1 = y2 - height;
+
+        path = this.rootLayer.path();
+        path.zIndex(1);
+        this.dropoffPaths.push(path);
+
+        path.tag = {
+          type: anychart.sankeyModule.Chart.ElementType.DROPOFF,
+          flow: flow
+        };
+
+        flow.path = path;
+        flow.rightX = x1;
+        flow.rightY = y2;
+
+        path
+            .moveTo(x0, y1)
+            .arcTo(radius, radius, -90, 90);
+
+        if (y1 + radius < y2)
+          path.lineTo(x1, y2);
+
+        path
+            .lineTo((x0 + x1) / 2, y2 + dropOffPadding)
+            .lineTo(x0, y2)
+            .close();
+      }
+    }
+
+    //region OLD DRAWING
+    // old
+    /*for (i = 0; i < 0; i++) {
+      level = this.levels[i];
+      nodesLength = level.nodes.length;
+      var pixelHeight = level.weight * this.weightAspect;
+      lastNodeDropOffPadding = level.nodes[nodesLength - 1].dropoffValue ? dropOffPadding : 0;
+
+      var height = (nodesLength - 1) * levelPadding + pixelHeight + lastNodeDropOffPadding;
       if (height > bounds.height) {
         height = bounds.height;
-        levelPadding = (height - pixelHeight - lastNodeDropOffPadding) / (nodesPerLevel - 1);
+        levelPadding = (height - pixelHeight - lastNodeDropOffPadding) / (nodesLength - 1);
       }
       level.top = bounds.top + (bounds.height - height) / 2;
 
       var lastTop = level.top;
       var index;
-      for (j = 0; j < level.nodes.length; j++) {
+
+      for (j = 0; j < nodesLength; j++) {
         var node = level.nodes[j];
         var nodeHeight = node.weight * this.weightAspect;
 
-        var path = this.rootElement.path();
+        var path = this.rootLayer.path();
         path.zIndex(2);
         this.nodePaths.push(path);
 
@@ -1035,7 +1418,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         };
         node.path = path;
 
-        var nodeLeft = (i * levelWidth) + (levelWidth - nodeWidth) / 2;
+        var nodeLeft = bounds.left + (i * levelWidth) + (levelWidth - nodeWidth) / 2;
         var nodeTop = lastTop;
         var nodeRight = nodeLeft + nodeWidth;
         var nodeBottom = nodeTop + nodeHeight;
@@ -1097,11 +1480,11 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
         lastTop = nodeBottom + levelPadding;
       }
-    }
+    }*/
 
-    var curvy = /** @type {number} */ (this.getOption('curveFactor')) * (bounds.width - nodeWidth) / (this.levels.length - 1);
+    // var curvy = /** @type {number} */ (this.getOption('curveFactor')) * (bounds.width - nodeWidth) / (this.levels.length - 1);
 
-    for (var dataIndex in this.flows) {
+    /*for (var dataIndex in this.flows) {
       var flow = this.flows[dataIndex];
       var fromNode = flow.from;
       var toNode = flow.to;
@@ -1112,7 +1495,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         var fromCoords = fromNode.outcomeCoords[indexFrom];
         var toCoords = toNode.incomeCoords[indexTo];
 
-        path = this.rootElement.path();
+        path = this.rootLayer.path();
         path.zIndex(1);
 
         path.tag = {
@@ -1145,13 +1528,13 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       } else {
         // dropoff flow
         height = fromNode.dropoffValue * this.weightAspect;
-        var left = /** @type {number} */ (fromNode.right);
+        var left = /!** @type {number} *!/ (fromNode.right);
         var radius = Math.min(height, nodeWidth / 4);
         var right = left + radius;
-        var y2 = /** @type {number} */ (fromNode.bottom);
+        var y2 = /!** @type {number} *!/ (fromNode.bottom);
         var y1 = y2 - height;
 
-        path = this.rootElement.path();
+        path = this.rootLayer.path();
         path.zIndex(1);
 
         path.tag = {
@@ -1177,7 +1560,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
             .lineTo(left, y2)
             .close();
       }
-    }
+    }*/
+    //endregion
 
     this.invalidate(anychart.ConsistencyState.APPEARANCE | this.LABELS_STATE);
     this.markConsistent(anychart.ConsistencyState.BOUNDS);
@@ -1219,7 +1603,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
   var labelsFormatProvider, labelsPositionProvider, labelIndex;
   if (this.hasInvalidationState(anychart.ConsistencyState.SANKEY_NODE_LABELS)) {
     var labels = this.node_.labels();
-    labels.clear().container(this.rootElement).zIndex(3);
+    labels.clear().container(this.rootLayer).zIndex(3);
 
     for (var name in this.nodes) {
       node = /** @type {anychart.sankeyModule.Chart.Node} */ (this.nodes[name]);
@@ -1227,8 +1611,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       labelsFormatProvider = this.createLabelContextProvider(node, anychart.sankeyModule.Chart.ElementType.NODE);
       labelsPositionProvider = {
         'value': {
-          'x': (node.left + node.right) / 2,
-          'y': (node.top + node.bottom) / 2
+          'x': (node.x0 + node.x1) / 2,
+          'y': (node.y0 + node.y1) / 2
         }
       };
 
@@ -1245,9 +1629,10 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     var flowLabels = this.flow_.labels();
     var dropoffLabels = this.dropoff_.labels();
 
-    flowLabels.clear().container(this.rootElement).zIndex(3);
-    dropoffLabels.clear().container(this.rootElement).zIndex(3);
+    flowLabels.clear().container(this.rootLayer).zIndex(3);
+    dropoffLabels.clear().container(this.rootLayer).zIndex(3);
 
+    var fromNode, toNode;
     for (dataIndex in this.flows) {
       flow = /** @type {anychart.sankeyModule.Chart.Flow} */ (this.flows[dataIndex]);
       labelIndex = anychart.utils.toNumber(dataIndex);
@@ -1368,21 +1753,30 @@ anychart.sankeyModule.Chart.prototype.drawLabel_ = function(source, element, sta
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.serialize = function() {
   var json = anychart.sankeyModule.Chart.base(this, 'serialize');
-  anychart.core.settings.serialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, json);
+
+  json['type'] = this.getType();
+  json['data'] = this.data().serialize();
+  json['tooltip'] = this.tooltip().serialize();
+  json['palette'] = this.palette().serialize();
 
   json['dropoff'] = this.dropoff().serialize();
   json['flow'] = this.flow().serialize();
   json['node'] = this.node().serialize();
 
-  return json;
+  anychart.core.settings.serialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, json);
+
+  return {'chart': json};
 };
 
 
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default) {
   anychart.sankeyModule.Chart.base(this, 'setupByJSON', config, opt_default);
-  anychart.core.settings.deserialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, config, opt_default);
+  this.data(config['data'] || null);
+  this.palette(config['palette']);
 
+  if ('tooltip' in config)
+    this.tooltip().setupInternal(!!opt_default, config['tooltip']);
   if ('dropoff' in config)
     this.dropoff().setupInternal(!!opt_default, config['dropoff']);
   if ('flow' in config)
@@ -1390,6 +1784,7 @@ anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default
   if ('node' in config) {
     this.node().setupInternal(!!opt_default, config['node']);
   }
+  anychart.core.settings.deserialize(this, anychart.sankeyModule.Chart.OWN_DESCRIPTORS, config, opt_default);
 };
 
 

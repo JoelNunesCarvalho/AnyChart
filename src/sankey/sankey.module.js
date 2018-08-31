@@ -10,10 +10,12 @@ goog.require('anychart.sankeyModule.Chart');
 
 /**
  * Default sankey chart.
+ * @param {?(anychart.data.View|anychart.data.Set|Array|string)=} opt_data Value to set.
+ * @param {(anychart.enums.TextParsingMode|anychart.data.TextParsingSettings)=} opt_csvSettings - If CSV string is passed, you can pass CSV parser settings here as a hash map.
  * @return {anychart.sankeyModule.Chart} Sankey chart with defaults.
  */
-anychart.sankey = function() {
-  var chart = new anychart.sankeyModule.Chart();
+anychart.sankey = function(opt_data, opt_csvSettings) {
+  var chart = new anychart.sankeyModule.Chart(opt_data, opt_csvSettings);
   chart.setupInternal(true, anychart.getFullTheme('sankey'));
   return chart;
 };
