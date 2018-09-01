@@ -108,7 +108,7 @@ anychart.core.ui.LabelsFactory = function() {
   anychart.core.settings.createDescriptorsMeta(this.descriptorsMeta, [
     ['format', anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
     ['positionFormatter', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
-    ['position', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
+    ['position', anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
     ['anchor', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
     ['offsetX', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
     ['offsetY', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
@@ -1770,7 +1770,8 @@ anychart.core.ui.LabelsFactory.Label.prototype.positionProvider = function(opt_v
   if (goog.isDef(opt_value)) {
     if (this.positionProvider_ != opt_value) {
       this.positionProvider_ = opt_value;
-      this.invalidate(anychart.ConsistencyState.LABELS_FACTORY_POSITION, anychart.Signal.BOUNDS_CHANGED);
+      this.invalidate(anychart.ConsistencyState.BOUNDS |
+        anychart.ConsistencyState.LABELS_FACTORY_POSITION, anychart.Signal.BOUNDS_CHANGED);
     }
     return this;
   } else {
@@ -2230,7 +2231,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   //
   // if (!this.labelBounds)
   //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
-  // this.labelBounds.setBounds(new anychart.math.rect(bounds.left, bounds.top, bounds.width, bounds.height));
+  // this.labelBounds.setBounds(new anychart.math.rect(this.bounds_.left, this.bounds_.top, this.bounds_.width, this.bounds_.height));
 
   if (this.isComplexText()) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
@@ -2435,6 +2436,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
   }
 
   if (this.checkInvalidationState(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS)) {
+    console.log('!!!');
     var isComplex = this.isComplexText();
 
     this.updateComplexSettings();
