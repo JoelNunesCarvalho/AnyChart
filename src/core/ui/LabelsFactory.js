@@ -2436,7 +2436,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
   }
 
   if (this.checkInvalidationState(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS)) {
-    console.log('!!!');
     var isComplex = this.isComplexText();
 
     this.updateComplexSettings();
