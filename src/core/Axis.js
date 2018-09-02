@@ -1257,8 +1257,6 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
     label.ownSettings.parentBounds = this.parentBounds();
     label.setComplex(null);
 
-    console.log(goog.object.clone(label.ownSettings), goog.object.clone(labels.ownSettings), goog.object.clone(labels.themeSettings));
-
     label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
 
     // var textEl = label.textElement;
