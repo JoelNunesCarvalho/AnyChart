@@ -1311,7 +1311,7 @@ anychart.core.ui.LabelsFactory.Label = function() {
     ['width', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED, void 0, void 0, beforeInvalidationHook],
     ['height', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED, void 0, void 0, beforeInvalidationHook],
     ['clip', anychart.ConsistencyState.LABELS_FACTORY_CLIP, anychart.Signal.NEEDS_REDRAW, void 0, void 0, beforeInvalidationHook],
-    ['enabled', anychart.ConsistencyState.ENABLED, anychart.Signal.BOUNDS_CHANGED | anychart.Signal.NEEDS_REDRAW, void 0, beforeInvalidationHook]
+    ['enabled', anychart.ConsistencyState.ENABLED, anychart.Signal.BOUNDS_CHANGED | anychart.Signal.NEEDS_REDRAW, void 0, void 0, beforeInvalidationHook]
   ]);
 };
 goog.inherits(anychart.core.ui.LabelsFactory.Label, anychart.core.VisualBase);
@@ -1930,10 +1930,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.iterateDrawingPlans = function(pr
   var result = void 0;
   var settings = this.getDrawingPlan();
 
-  if (opt_field == 'fontColor') {
-    debugger
-  }
-
   iterator(settings, function(state, i) {
     var stateSettings = goog.isString(state) ? state == 'auto' ? this.autoSettings : this.states_[state] : state;
 
@@ -2180,7 +2176,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.clear = function() {
  */
 anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, parentBounds) {
   var positionFormatter = this.mergedSettings['positionFormatter'];
-
   var isTextByPath = this.isComplex && this.textElement.path();
   var anchor = isTextByPath ?
       anychart.enums.Anchor.CENTER :
