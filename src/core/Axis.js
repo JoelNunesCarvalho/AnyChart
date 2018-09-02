@@ -1361,8 +1361,9 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
     labelBounds = textEl.getBounds();
 
     var padding = label.getFinalSettings('padding');
-
-    labelBounds = anychart.core.utils.Padding.widenBounds(labelBounds, padding);
+    if (padding && !goog.object.isEmpty(padding)) {
+      labelBounds = anychart.core.utils.Padding.widenBounds(labelBounds, padding);
+    }
 
     labelBounds.left = x;
     labelBounds.top = y;

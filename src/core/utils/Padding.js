@@ -46,10 +46,10 @@ anychart.core.utils.Padding.widenBounds = function(bounds, padding) {
   var initialHeight = bounds.height;
   var initialWidth = bounds.width;
 
-  var top = padding.top;
-  var bottom = padding.bottom;
-  var left = padding.left;
-  var right = padding.right;
+  var top = padding.top || 0;
+  var bottom = padding.bottom || 0;
+  var left = padding.left || 0;
+  var right = padding.right || 0;
 
   var width, height;
 
