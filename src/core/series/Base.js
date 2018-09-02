@@ -2365,8 +2365,6 @@ anychart.core.series.Base.prototype.drawFactoryElement = function(seriesFactoryG
               chartNormal, anychart.utils.ExtractSettingModes.THEME_SETTINGS
             ], 'position'),
             'auto');
-
-        this.getIterator().meta('labelPosition', position)
       } else {
         position = anychart.utils.getFirstDefinedValueRecursive(
             anychart.utils.extractSettings([
@@ -2378,7 +2376,7 @@ anychart.core.series.Base.prototype.drawFactoryElement = function(seriesFactoryG
             'auto');
       }
       positionProvider = this.createPositionProvider(/** @type {anychart.enums.Position|string} */(position), true);
-      return this.drawSingleFactoryElement(factories, settings, index, positionProvider, formatProvider, callDraw);
+      return this.drawSingleFactoryElement(factories, settings, index, positionProvider, formatProvider, callDraw, /** @type {string} */(position));
     }
   } else {
     if (positionYs) {
@@ -2457,39 +2455,24 @@ anychart.core.series.Base.prototype.resolveAutoAnchor = function(position, rotat
 
 /**
  * Checks if label bounds intersect series bounds and flips autoAnchor if needed.
+ * @param {anychart.core.ui.LabelsFactory} factory
+ * @param {anychart.core.ui.LabelsFactory.Label} label
  */
-anychart.core.series.Base.prototype.checkBoundsCollision = function() {
-  var factory = this.labels();
-  var iterator = this.getResetIterator();
-  while (iterator.advance()) {
-    var label = factory.getLabel(iterator.getIndex());
-    if (label) {
-      var anchor = label.getFinalSettings('anchor');
-      var position = iterator.meta('labelPosition');
-
-      if (goog.isDef(position) && anchor == anychart.enums.Anchor.AUTO) {
-        anchor = this.resolveAutoAnchor(position, Number(label.getFinalSettings('rotation')) || 0);
-        label.autoAnchor(anchor);
-
-        var bounds = label.bounds_;
-        var rotation = /** @type {number} */(label.getFinalSettings('rotation'));
-        anchor = anychart.utils.rotateAnchor(anchor, -rotation);
-        if (anychart.utils.isRightAnchor(anchor) && bounds.left < this.pixelBoundsCache.left ||
-            anychart.utils.isLeftAnchor(anchor) && (bounds.left + bounds.width > this.pixelBoundsCache.left + this.pixelBoundsCache.width)) {
-          anchor = anychart.utils.flipAnchorHorizontal(anchor);
-        }
-        if (anychart.utils.isBottomAnchor(anchor) && bounds.top < this.pixelBoundsCache.top ||
-            anychart.utils.isTopAnchor(anchor) && (bounds.top + bounds.height > this.pixelBoundsCache.top + this.pixelBoundsCache.height)) {
-
-          anchor = anychart.utils.flipAnchorVertical(anchor);
-        }
-        anchor = anychart.utils.rotateAnchor(anchor, rotation);
-        label.autoAnchor(anchor);
-      }
-    }
+anychart.core.series.Base.prototype.checkBoundsCollision = function(factory, label) {
+  var bounds = anychart.math.Rect.fromCoordinateBox(factory.measureWithTransform(label, undefined, {'anchor': label.autoAnchor()}));
+  var anchor = /** @type {anychart.enums.Anchor} */(label.autoAnchor());
+  var rotation = /** @type {number} */(label.getFinalSettings('rotation'));
+  anchor = anychart.utils.rotateAnchor(anchor, -rotation);
+  if (anychart.utils.isRightAnchor(anchor) && bounds.left < this.pixelBoundsCache.left ||
+      anychart.utils.isLeftAnchor(anchor) && (bounds.left + bounds.width > this.pixelBoundsCache.left + this.pixelBoundsCache.width)) {
+    anchor = anychart.utils.flipAnchorHorizontal(anchor);
   }
-
-  factory.draw();
+  if (anychart.utils.isBottomAnchor(anchor) && bounds.top < this.pixelBoundsCache.top ||
+      anychart.utils.isTopAnchor(anchor) && (bounds.top + bounds.height > this.pixelBoundsCache.top + this.pixelBoundsCache.height)) {
+    anchor = anychart.utils.flipAnchorVertical(anchor);
+  }
+  anchor = anychart.utils.rotateAnchor(anchor, rotation);
+  label.autoAnchor(anchor);
 };
 
 
@@ -2546,10 +2529,11 @@ anychart.core.series.Base.prototype.setupLabelDrawingPlan = function(label,
  * @param {*} positionProvider
  * @param {*} formatProvider
  * @param {boolean} callDraw
+ * @param {(?anychart.enums.Position|string)=} opt_position Position which is needed to calculate label auto anchor.
  * @return {anychart.core.ui.MarkersFactory.Marker|anychart.core.ui.LabelsFactory.Label}
  * @protected
  */
-anychart.core.series.Base.prototype.drawSingleFactoryElement = function(factories, settings, index, positionProvider, formatProvider, callDraw) {
+anychart.core.series.Base.prototype.drawSingleFactoryElement = function(factories, settings, index, positionProvider, formatProvider, callDraw, opt_position) {
   var mainFactory = /** @type {anychart.core.ui.LabelsFactory|anychart.core.ui.MarkersFactory} */(factories[0]);
   var element = formatProvider ? mainFactory.getLabel(/** @type {number} */(index)) : mainFactory.getMarker(/** @type {number} */(index));
   if (element) {
@@ -2565,11 +2549,15 @@ anychart.core.series.Base.prototype.drawSingleFactoryElement = function(factorie
   element.resetSettings();
   if (formatProvider) {
     var label = /** @type {anychart.core.ui.LabelsFactory.Label} */(element);
-    // label.setComplex(null);
     settings.unshift(label);
     this.setupLabelDrawingPlan.apply(this, settings);
 
+    var anchor = label.getFinalSettings('anchor');
     label.autoVertical(/** @type {boolean} */ (this.getOption('isVertical')));
+    if (goog.isDef(opt_position) && anchor == anychart.enums.Anchor.AUTO) {
+      label.autoAnchor(this.resolveAutoAnchor(opt_position, Number(label.getFinalSettings('rotation')) || 0));
+      this.checkBoundsCollision(/** @type {anychart.core.ui.LabelsFactory} */(mainFactory), label);
+    }
   } else {
     var currentFactory = /** @type {anychart.core.ui.MarkersFactory} */(factories[1] || mainFactory);
     var iterator = this.getIterator();
@@ -3269,12 +3257,7 @@ anychart.core.series.Base.prototype.draw = function() {
 
   for (i = 0; i < factoriesToFinalize.length; i++) {
     factory = factoriesToFinalize[i];
-    if (anychart.utils.instanceOf(factory, anychart.core.ui.LabelsFactory)) {
-      factory.draw();
-      this.checkBoundsCollision();
-    } else {
-      factory.draw();
-    }
+    factory.draw();
     factory.resumeSignalsDispatching(false);
   }
   // no other elements depend on CONTAINER or SERIES_POINTS

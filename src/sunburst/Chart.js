@@ -2570,7 +2570,6 @@ anychart.sunburstModule.Chart.prototype.drawLabel_ = function(pointState, opt_up
   var label = chartLabels.getLabel(index);
   if (!label)
     label = chartLabels.add(null, null, index);
-  label.setComplex(true);
 
   var depth = item.meta('depth');
   var positiveLevel = this.levelsPositive_[depth];

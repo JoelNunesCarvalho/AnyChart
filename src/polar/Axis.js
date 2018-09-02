@@ -934,7 +934,6 @@ anychart.polarModule.Axis.prototype.configureLabel_ = function(labels, index, ti
     label.suspendSignalsDispatching();
   }
   label.height(null);
-  label.setComplex(true);
 
   var pointState = {};
   if (label.getFinalSettings('position') != 'normal') {

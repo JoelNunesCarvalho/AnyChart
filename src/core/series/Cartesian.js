@@ -1161,8 +1161,6 @@ anychart.core.series.Cartesian.prototype.applyAppearanceToPoint = function(point
   if (this.check(anychart.core.series.Capabilities.SUPPORTS_LABELS))
     this.drawLabel(iterator, pointState, true);
 
-  this.checkBoundsCollision();
-
   return opt_value;
 };
 

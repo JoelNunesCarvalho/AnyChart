@@ -62,23 +62,16 @@ anychart.radarPolarBaseModule.Series.prototype.getDirectionAngle = function(posi
 
 
 /** @inheritDoc */
-anychart.radarPolarBaseModule.Series.prototype.checkBoundsCollision = function() {
-  var factory = this.labels();
-  var iterator = this.getResetIterator();
-  while (iterator.advance()) {
-    var label = factory.getLabel(iterator.getIndex());
-    if (label) {
-      var bounds = label.bounds_;
-      var anchor = /** @type {anychart.enums.Anchor} */(label.autoAnchor());
-      var flipped = anychart.utils.flipAnchor(anchor);
-      var farPoint = anychart.utils.getCoordinateByAnchor(bounds, flipped);
-      var x = farPoint['x'];
-      var y = farPoint['y'];
-      var distance = (x - this.cx) * (x - this.cx) + (y - this.cy) * (y - this.cy);
-      if (distance > this.radius * this.radius)
-        label.autoAnchor(flipped);
-    }
-  }
+anychart.radarPolarBaseModule.Series.prototype.checkBoundsCollision = function(factory, label) {
+  var bounds = factory.measure(label);
+  var anchor = /** @type {anychart.enums.Anchor} */(label.autoAnchor());
+  var flipped = anychart.utils.flipAnchor(anchor);
+  var farPoint = anychart.utils.getCoordinateByAnchor(bounds, flipped);
+  var x = farPoint['x'];
+  var y = farPoint['y'];
+  var distance = (x - this.cx) * (x - this.cx) + (y - this.cy) * (y - this.cy);
+  if (distance > this.radius * this.radius)
+    label.autoAnchor(flipped);
 };
 
 
