@@ -1256,6 +1256,9 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
     label = labels.add(formatProvider, positionProvider, index);
     label.ownSettings.parentBounds = this.parentBounds();
     label.setComplex(null);
+
+    console.log(goog.object.clone(label.ownSettings), goog.object.clone(labels.ownSettings), goog.object.clone(labels.themeSettings));
+
     label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
 
     // var textEl = label.textElement;
@@ -1351,7 +1354,8 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
     labelBounds = labels.measure(label, undefined, undefined, index);
   } else {
     var textEl = label.getTextElement();
-
+    textEl.dropBounds();
+    textEl.setPosition(0, 0);
     labelBounds = textEl.getBounds();
 
     var padding = label.getFinalSettings('padding');
