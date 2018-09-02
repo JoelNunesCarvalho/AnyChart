@@ -103,7 +103,8 @@ anychart.core.ui.LabelsFactory = function() {
   anychart.core.settings.createTextPropertiesDescriptorsMeta(this.descriptorsMeta,
       anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS,
       anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS,
-      anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED);
+      anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED,
+      anychart.Signal.NEEDS_REDRAW);
   anychart.core.settings.createDescriptorsMeta(this.descriptorsMeta, [
     ['format', anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
     ['positionFormatter', anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED],
