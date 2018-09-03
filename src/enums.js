@@ -5069,7 +5069,10 @@ anychart.enums.Store = {
  */
 anychart.enums.State = {
   DATA_AREA: 'dataarea',
-  APPEARANCE: 'appearance'
+  APPEARANCE: 'appearance',
+  DATA: 'data',
+  NODE_LABELS: 'nodelabels',
+  FLOW_LABELS: 'flowlabels'
 };
 //endregion
 
