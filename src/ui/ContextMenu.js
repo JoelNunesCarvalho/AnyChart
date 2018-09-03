@@ -281,6 +281,8 @@ anychart.ui.ContextMenu.prototype.itemsFormatter = function(opt_value) {
  */
 anychart.ui.ContextMenu.prototype.handleContextMenu_ = function(e) {
   if (!this.enabledInternal_) return;
+  //a workaround for Android devices
+  this.chart_.tooltip().hide();
   this.contextTarget_ = e['target'];
   this.prepareItems_(e, this.contextTarget_);
 
