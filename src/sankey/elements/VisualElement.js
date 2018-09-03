@@ -15,9 +15,10 @@ goog.require('anychart.core.ui.Tooltip');
  * @constructor
  * @extends {anychart.core.Base}
  * @param {anychart.sankeyModule.Chart} chart
+ * @param {anychart.sankeyModule.Chart.ElementType} type
  * @implements {anychart.core.settings.IObjectWithSettings}
  */
-anychart.sankeyModule.elements.VisualElement = function(chart) {
+anychart.sankeyModule.elements.VisualElement = function(chart, type) {
   anychart.sankeyModule.elements.VisualElement.base(this, 'constructor');
 
   /**
@@ -25,6 +26,13 @@ anychart.sankeyModule.elements.VisualElement = function(chart) {
    * @type {anychart.sankeyModule.Chart}
    */
   this.chart = chart;
+
+  /**
+   * Element type.
+   * @type {anychart.sankeyModule.Chart.ElementType}
+   * @private
+   */
+  this.type_ = type;
 
   /**
    * @type {anychart.core.ui.Tooltip}
@@ -61,6 +69,17 @@ anychart.sankeyModule.elements.VisualElement.prototype.SUPPORTED_SIGNALS =
     anychart.Signal.NEEDS_REDRAW_APPEARANCE |
     anychart.Signal.NEEDS_UPDATE_TOOLTIP |
     anychart.Signal.NEEDS_REDRAW_LABELS;
+
+
+//endregion
+//region Infrastructure
+/**
+ * Returns type of sankey visual element.
+ * @return {anychart.sankeyModule.Chart.ElementType} Element type.
+ */
+anychart.sankeyModule.elements.VisualElement.prototype.getType = function() {
+  return this.type_;
+};
 
 
 //endregion

@@ -1,12 +1,11 @@
 //region Provide / Require
 goog.provide('anychart.sankeyModule.Chart');
+goog.require('anychart.consistency');
 goog.require('anychart.core.Chart');
 goog.require('anychart.core.StateSettings');
 goog.require('anychart.data.Set');
 goog.require('anychart.format.Context');
-goog.require('anychart.sankeyModule.elements.Dropoff');
-goog.require('anychart.sankeyModule.elements.Flow');
-goog.require('anychart.sankeyModule.elements.Node');
+goog.require('anychart.sankeyModule.elements.VisualElement');
 //endregion
 //region Constructor
 
@@ -32,14 +31,17 @@ anychart.sankeyModule.Chart = function(opt_data, opt_csvSettings) {
 
   anychart.core.settings.createDescriptorsMeta(this.descriptorsMeta, anychart.sankeyModule.Chart.OWN_DESCRIPTORS_META);
 
-  this.LABELS_STATE = anychart.ConsistencyState.SANKEY_NODE_LABELS | anychart.ConsistencyState.SANKEY_FLOW_LABELS;
-
   this.data(opt_data || null, opt_csvSettings);
 
   this.ascendingToNodeFlowY = goog.bind(this.ascendingToNodeFlowY, this);
   this.ascendingFromNodeFlowY = goog.bind(this.ascendingFromNodeFlowY, this);
 };
 goog.inherits(anychart.sankeyModule.Chart, anychart.core.Chart);
+anychart.consistency.supportStates(anychart.sankeyModule.Chart, anychart.enums.Store.SANKEY, [
+  anychart.enums.State.APPEARANCE,
+  anychart.enums.State.DATA,
+  anychart.enums.State.FLOW_LABELS,
+  anychart.enums.State.NODE_LABELS]);
 
 
 //endregion
@@ -49,18 +51,6 @@ goog.inherits(anychart.sankeyModule.Chart, anychart.core.Chart);
  * @type {number}
  */
 anychart.sankeyModule.Chart.prototype.SUPPORTED_SIGNALS = anychart.core.Chart.prototype.SUPPORTED_SIGNALS;
-
-
-/**
- * Supported consistency states.
- * @type {number}
- */
-anychart.sankeyModule.Chart.prototype.SUPPORTED_CONSISTENCY_STATES =
-    anychart.core.Chart.prototype.SUPPORTED_CONSISTENCY_STATES |
-    anychart.ConsistencyState.SANKEY_DATA |
-    anychart.ConsistencyState.SANKEY_NODE_LABELS |
-    anychart.ConsistencyState.SANKEY_FLOW_LABELS |
-    anychart.ConsistencyState.APPEARANCE;
 
 
 //endregion
@@ -133,7 +123,7 @@ anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings
         this.data_ = new anychart.data.Set(
             (goog.isArray(opt_value) || goog.isString(opt_value)) ? opt_value : null, opt_csvSettings).mapAs();
       this.data_.listenSignals(this.dataInvalidated_, this);
-      this.invalidate(anychart.ConsistencyState.SANKEY_DATA, anychart.Signal.NEEDS_REDRAW);
+      this.invalidateState(anychart.enums.Store.SANKEY, anychart.enums.State.DATA, anychart.Signal.NEEDS_REDRAW);
     }
     return this;
   }
@@ -147,7 +137,7 @@ anychart.sankeyModule.Chart.prototype.data = function(opt_value, opt_csvSettings
  * @private
  */
 anychart.sankeyModule.Chart.prototype.dataInvalidated_ = function(e) {
-  this.invalidate(anychart.ConsistencyState.SANKEY_DATA, anychart.Signal.NEEDS_REDRAW);
+  this.invalidateState(anychart.enums.Store.SANKEY, anychart.enums.State.DATA, anychart.Signal.NEEDS_REDRAW);
 };
 
 
@@ -199,6 +189,7 @@ anychart.sankeyModule.Chart.prototype.isMissing_ = function(from, to, flow) {
 /**
  * @typedef {{
  *   id: (number|undefined),
+ *   type: anychart.sankeyModule.Chart.ElementType,
  *   name: !string,
  *   level: !number,
  *   weight: (number|undefined),
@@ -231,6 +222,7 @@ anychart.sankeyModule.Chart.Node;
 
 /**
  * @typedef {{
+ *   type: anychart.sankeyModule.Chart.ElementType,
  *   dataIndex: number,
  *   from: anychart.sankeyModule.Chart.Node,
  *   to: ?anychart.sankeyModule.Chart.Node,
@@ -297,21 +289,18 @@ anychart.sankeyModule.Chart.prototype.shiftNodeLevels = function(fromNode) {
 anychart.sankeyModule.Chart.prototype.createFlow = function(fromNode, toNode, flow) {
   var index = this.getIterator().getIndex();
   this.flows[index] = {
+    type: toNode ? anychart.sankeyModule.Chart.ElementType.FLOW : anychart.sankeyModule.Chart.ElementType.DROPOFF,
     dataIndex: index,
     from: fromNode,
     to: toNode,
     weight: flow
   };
-  if (toNode === null) {
-    this.createDropOffFlow(fromNode, flow);
-  } else {
+  fromNode.outcomeValue += flow;
+
+  if (toNode) {
     fromNode.outcomeFlows.push(this.flows[index]);
-    fromNode.outcomeValue += flow;
     fromNode.outcomeValues.push(flow);
     fromNode.outcomeNodes.push(toNode);
-
-    if (isNaN(toNode.incomeValue))
-      toNode.incomeValue = 0;
 
     toNode.incomeValue += flow;
     toNode.incomeValues.push(flow);
@@ -323,19 +312,10 @@ anychart.sankeyModule.Chart.prototype.createFlow = function(fromNode, toNode, fl
     }
     if (toNode.level > this.lastLevel)
       this.lastLevel = toNode.level;
+  } else {
+    fromNode.dropoffValue += flow;
+    fromNode.dropoffValues.push(flow);
   }
-};
-
-
-/**
- * Creates drop off flow.
- * @param {anychart.sankeyModule.Chart.Node} fromNode
- * @param {number} flow
- */
-anychart.sankeyModule.Chart.prototype.createDropOffFlow = function(fromNode, flow) {
-  fromNode.outcomeValue += flow;
-  fromNode.dropoffValue += flow;
-  fromNode.dropoffValues.push(flow);
 };
 
 
@@ -345,29 +325,30 @@ anychart.sankeyModule.Chart.prototype.createDropOffFlow = function(fromNode, flo
  * @return {?anychart.sankeyModule.Chart.Node}
  */
 anychart.sankeyModule.Chart.prototype.getNode = function(name) {
-  if (name === null)
-    return null;
-
-  if (!this.nodes[name]) {
-    this.nodes[name] = {
-      name: /** @type {string} */ (name),
-      level: 0,
-      incomeValue: 0,
-      outcomeValue: 0,
-      dropoffValue: 0,
-      incomeNodes: [],
-      outcomeNodes: [],
-      incomeValues: [],
-      outcomeValues: [],
-      dropoffValues: [],
-      incomeCoords: [],
-      outcomeCoords: [],
-      incomeFlows: [],
-      outcomeFlows: [],
-      conflict: false
-    };
+  if (name) {
+    if (!this.nodes[name]) {
+      this.nodes[name] = {
+        type: anychart.sankeyModule.Chart.ElementType.NODE,
+        name: /** @type {string} */ (name),
+        level: 0,
+        incomeValue: 0,
+        outcomeValue: 0,
+        dropoffValue: 0,
+        incomeNodes: [],
+        outcomeNodes: [],
+        incomeValues: [],
+        outcomeValues: [],
+        dropoffValues: [],
+        incomeCoords: [],
+        outcomeCoords: [],
+        incomeFlows: [],
+        outcomeFlows: [],
+        conflict: false
+      };
+    }
+    return this.nodes[name];
   }
-  return this.nodes[name];
+  return null;
 };
 
 
@@ -486,10 +467,10 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
 
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.calculate = function() {
-  if (this.hasInvalidationState(anychart.ConsistencyState.SANKEY_DATA)) {
+  if (this.hasStateInvalidation(anychart.enums.Store.SANKEY, anychart.enums.State.DATA)) {
     this.calculateLevels_();
     this.invalidate(anychart.ConsistencyState.BOUNDS);
-    this.markConsistent(anychart.ConsistencyState.SANKEY_DATA);
+    this.markStateConsistent(anychart.enums.Store.SANKEY, anychart.enums.State.DATA);
   }
 };
 
@@ -514,36 +495,39 @@ anychart.sankeyModule.Chart.prototype.onTooltipSignal_ = function(event) {
 
 
 /**
+ * Creates context values.
+ * @param {Object} values
+ * @param {anychart.sankeyModule.Chart.Node|anychart.sankeyModule.Chart.Flow} element
+ */
+anychart.sankeyModule.Chart.prototype.createContextValues = function(values, element) {
+  var name;
+  var elementType = /** @type {anychart.sankeyModule.Chart.ElementType} */ (element.type);
+
+  if (elementType == anychart.sankeyModule.Chart.ElementType.NODE) {
+    name = element.name;
+  } else if (elementType == anychart.sankeyModule.Chart.ElementType.FLOW) {
+    name = element.from.name + ' -> ' + element.to.name;
+  } else {
+    name = element.from.name + ' dropoff';
+  }
+  values['type'] = {value: anychart.sankeyModule.Chart.ElementTypeString[elementType], type: anychart.enums.TokenType.STRING};
+  values['name'] = {value: name, type: anychart.enums.TokenType.STRING};
+  values['value'] = {value: element.weight, type: anychart.enums.TokenType.NUMBER};
+};
+
+
+/**
  * Creates provider for sankey labels.
  * @param {anychart.sankeyModule.Chart.Node|anychart.sankeyModule.Chart.Flow} element
- * @param {anychart.sankeyModule.Chart.ElementType} elementType
  * @param {boolean=} opt_force - create context provider forcibly.
  * @return {anychart.format.Context}
  */
-anychart.sankeyModule.Chart.prototype.createLabelContextProvider = function(element, elementType, opt_force) {
+anychart.sankeyModule.Chart.prototype.createLabelContextProvider = function(element, opt_force) {
   if (!this.labelsContextProvider_ || opt_force)
     this.labelsContextProvider_ = new anychart.format.Context();
 
-  var name;
   var values = {};
-  values['type'] = {value: elementType, type: anychart.enums.TokenType.STRING};
-
-  var value = element.weight;
-
-  if (elementType == anychart.sankeyModule.Chart.ElementType.NODE) {
-    values['value'] = {value: value, type: anychart.enums.TokenType.STRING};
-    values['name'] = {value: element.name, type: anychart.enums.TokenType.STRING};
-
-  } else if (elementType == anychart.sankeyModule.Chart.ElementType.FLOW) {
-    name = element.from.name + ' -> ' + element.to.name;
-    values['value'] = {value: value, type: anychart.enums.TokenType.STRING};
-    values['name'] = {value: name, type: anychart.enums.TokenType.STRING};
-
-  } else {
-    name = element.from.name + ' dropoff';
-    values['value'] = {value: value, type: anychart.enums.TokenType.STRING};
-    values['name'] = {value: name, type: anychart.enums.TokenType.STRING};
-  }
+  this.createContextValues(values, element);
 
   return /** @type {anychart.format.Context} */ (this.labelsContextProvider_.propagate(values));
 };
@@ -559,26 +543,7 @@ anychart.sankeyModule.Chart.prototype.createContextProvider = function(tag) {
     this.contextProvider_ = new anychart.format.Context();
 
   var values = {};
-  values['type'] = {value: tag.type, type: anychart.enums.TokenType.STRING};
-
-  var name, node, flow;
-
-  if (tag.type == anychart.sankeyModule.Chart.ElementType.NODE) {
-    node = tag.node;
-    name = node.name;
-    values['value'] = {value: node.weight, type: anychart.enums.TokenType.STRING};
-    values['name'] = {value: name, type: anychart.enums.TokenType.STRING};
-  } else if (tag.type == anychart.sankeyModule.Chart.ElementType.FLOW) {
-    flow = tag.flow;
-    name = flow.from.name + ' -> ' + flow.to.name;
-    values['value'] = {value: flow.weight, type: anychart.enums.TokenType.STRING};
-    values['name'] = {value: name, type: anychart.enums.TokenType.STRING};
-  } else {
-    flow = tag.flow;
-    name = flow.from.name + ' dropoff';
-    values['value'] = {value: flow.weight, type: anychart.enums.TokenType.STRING};
-    values['name'] = {value: name, type: anychart.enums.TokenType.STRING};
-  }
+  this.createContextValues(values, tag.element);
 
   return /** @type {anychart.format.Context} */ (this.contextProvider_.propagate(values));
 };
@@ -587,13 +552,13 @@ anychart.sankeyModule.Chart.prototype.createContextProvider = function(tag) {
 /**
  * Labels position for HOVERED state flows.
  * @param {anychart.sankeyModule.Chart.Flow} flow
- * @param {string} side
+ * @param {string=} opt_side
  * @return {{x: number, y: number}}
  */
-anychart.sankeyModule.Chart.prototype.hoverNodeFlowsPositionProvider = function(flow, side) {
+anychart.sankeyModule.Chart.prototype.hoverNodeFlowsPositionProvider = function(flow, opt_side) {
   return {
-    'x': flow[side].x,
-    'y': flow[side].y
+    'x': flow[opt_side].x,
+    'y': flow[opt_side].y
   };
 };
 
@@ -601,9 +566,10 @@ anychart.sankeyModule.Chart.prototype.hoverNodeFlowsPositionProvider = function(
 /**
  * Labels position for NORMAL state flows.
  * @param {anychart.sankeyModule.Chart.Flow} flow
+ * @param {string=} opt_side
  * @return {{x: number, y: number}}
  */
-anychart.sankeyModule.Chart.prototype.unhoverNodeFlowsPositionProvider = function(flow) {
+anychart.sankeyModule.Chart.prototype.unhoverNodeFlowsPositionProvider = function(flow, opt_side) {
   return {
     'x': /** @type {number} */ ((flow['left'] + flow['right']) / 2),
     'y': /** @type {number} */ (flow['topCenter'])
@@ -616,7 +582,7 @@ anychart.sankeyModule.Chart.prototype.unhoverNodeFlowsPositionProvider = functio
  * @param {Array.<anychart.sankeyModule.Chart.Flow>} flowArray
  * @param {anychart.enums.Anchor} autoAnchor
  * @param {anychart.PointState|number} state
- * @param {Function} positionProviderFn
+ * @param {function(anychart.sankeyModule.Chart.Flow, string=):{x:number, y:number}} positionProviderFn
  * @param {string=} opt_side
  */
 anychart.sankeyModule.Chart.prototype.colorNodeFlows = function(flowArray, autoAnchor, state, positionProviderFn, opt_side) {
@@ -657,19 +623,19 @@ anychart.sankeyModule.Chart.prototype.setFillStroke = function(source, tag, path
  * @param {anychart.PointState|number} state
  * @param {anychart.enums.Anchor} incomeAutoAnchor Auto anchor for related income flows.
  * @param {anychart.enums.Anchor} outcomeAutoAnchor Auto anchor for related outcome flows.
- * @param {Function} positionProviderFn Labels position provider function.
+ * @param {function(anychart.sankeyModule.Chart.Flow, string=):{x:number, y:number}} positionProviderFn Labels position provider function.
  */
 anychart.sankeyModule.Chart.prototype.colorizeNode = function(path, state, incomeAutoAnchor, outcomeAutoAnchor, positionProviderFn) {
   var tag = /** @type {Object} */ (path.tag);
   // sets <state> state color for node
   this.setFillStroke(this.node_, tag, path, state);
-
+  var element = /** @type {anychart.sankeyModule.Chart.Node} */ (tag.element);
   // sets <state>> state color for node's income and outcome flows
-  this.colorNodeFlows(tag.node.incomeFlows, incomeAutoAnchor, state, positionProviderFn, 'leftTop');
-  this.colorNodeFlows(tag.node.outcomeFlows, outcomeAutoAnchor, state, positionProviderFn, 'rightTop');
+  this.colorNodeFlows(element.incomeFlows, incomeAutoAnchor, state, positionProviderFn, 'leftTop');
+  this.colorNodeFlows(element.outcomeFlows, outcomeAutoAnchor, state, positionProviderFn, 'rightTop');
 
   // draws <state> label for node
-  this.drawLabel_(this.node_, tag.node, state);
+  this.drawLabel_(this.node_, element, state);
 };
 
 
@@ -683,7 +649,7 @@ anychart.sankeyModule.Chart.prototype.colorizeFlow = function(path, state) {
   // sets <state> state color for flow
   this.setFillStroke(this.flow_, tag, path, state);
 
-  var flow = tag.flow;
+  var flow = /** @type {anychart.sankeyModule.Chart.Flow} */ (tag.element);
   flow.label.autoAnchor(anychart.enums.Anchor.CENTER_BOTTOM);
   flow.label.positionProvider({
     'value': this.unhoverNodeFlowsPositionProvider(flow)
@@ -709,7 +675,7 @@ anychart.sankeyModule.Chart.prototype.colorizeDropoff = function(path, state) {
   this.setFillStroke(this.dropoff_, tag, path, state);
 
   // draws <state> label for dropoff flow
-  this.drawLabel_(this.dropoff_, tag.flow, state);
+  this.drawLabel_(this.dropoff_, tag.element, state);
 };
 
 
@@ -720,7 +686,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOverAndMove = function(event) {
   var tooltip;
 
   if (tag) {
-    var type = tag.type;
+    var type = tag.element.type;
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
       tooltip = this.node_.tooltip();
@@ -751,7 +717,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
   var tag = /** @type {Object} */ (domTarget.tag);
   this.tooltip().hide();
   if (tag) {
-    var type = tag.type;
+    var type = tag.element.type;
 
     if (type == anychart.sankeyModule.Chart.ElementType.NODE) {
       // colorize node and all related flows
@@ -775,23 +741,23 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
  * @private
  */
 anychart.sankeyModule.Chart.prototype.elementInvalidated_ = function(event) {
-  var state = anychart.ConsistencyState.APPEARANCE;
+  var states = [anychart.ConsistencyState.APPEARANCE];
   if (event.hasSignal(anychart.Signal.NEEDS_REDRAW_LABELS)) {
-    var nodeLabels = anychart.utils.instanceOf(event.target, anychart.sankeyModule.elements.Node);
-    state |= (nodeLabels ? anychart.ConsistencyState.SANKEY_NODE_LABELS : anychart.ConsistencyState.SANKEY_FLOW_LABELS);
+    var nodeLabels = this.isNode(/** @type {anychart.sankeyModule.elements.VisualElement} */ (event.target));
+    states.push(nodeLabels ? anychart.enums.State.NODE_LABELS : anychart.enums.State.FLOW_LABELS);
   }
-  this.invalidate(state, anychart.Signal.NEEDS_REDRAW);
+  this.invalidateMultiState(anychart.enums.Store.SANKEY, states, anychart.Signal.NEEDS_REDRAW);
 };
 
 
 /**
  * Dropoff element settings.
  * @param {Object=} opt_value
- * @return {anychart.sankeyModule.elements.Dropoff|anychart.sankeyModule.Chart}
+ * @return {anychart.sankeyModule.elements.VisualElement|anychart.sankeyModule.Chart}
  */
 anychart.sankeyModule.Chart.prototype.dropoff = function(opt_value) {
   if (!this.dropoff_) {
-    this.dropoff_ = new anychart.sankeyModule.elements.Dropoff(this);
+    this.dropoff_ = new anychart.sankeyModule.elements.VisualElement(this, anychart.sankeyModule.Chart.ElementType.DROPOFF);
     this.dropoff_.listenSignals(this.elementInvalidated_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -805,11 +771,11 @@ anychart.sankeyModule.Chart.prototype.dropoff = function(opt_value) {
 /**
  * Flow element settings.
  * @param {Object=} opt_value
- * @return {anychart.sankeyModule.elements.Flow|anychart.sankeyModule.Chart}
+ * @return {anychart.sankeyModule.elements.VisualElement|anychart.sankeyModule.Chart}
  */
 anychart.sankeyModule.Chart.prototype.flow = function(opt_value) {
   if (!this.flow_) {
-    this.flow_ = new anychart.sankeyModule.elements.Flow(this);
+    this.flow_ = new anychart.sankeyModule.elements.VisualElement(this, anychart.sankeyModule.Chart.ElementType.FLOW);
     this.flow_.listenSignals(this.elementInvalidated_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -823,11 +789,11 @@ anychart.sankeyModule.Chart.prototype.flow = function(opt_value) {
 /**
  * Node element settings.
  * @param {Object=} opt_value
- * @return {anychart.sankeyModule.elements.Node|anychart.sankeyModule.Chart}
+ * @return {anychart.sankeyModule.elements.VisualElement|anychart.sankeyModule.Chart}
  */
 anychart.sankeyModule.Chart.prototype.node = function(opt_value) {
   if (!this.node_) {
-    this.node_ = new anychart.sankeyModule.elements.Node(this);
+    this.node_ = new anychart.sankeyModule.elements.VisualElement(this, anychart.sankeyModule.Chart.ElementType.NODE);
     this.node_.listenSignals(this.elementInvalidated_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -884,7 +850,7 @@ anychart.sankeyModule.Chart.prototype.setupPalette_ = function(cls, opt_cloneFro
       this.palette_.setup(opt_cloneFrom);
     this.palette_.listenSignals(this.paletteInvalidated_, this);
     if (doDispatch)
-      this.invalidate(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.CHART_LEGEND, anychart.Signal.NEEDS_REDRAW);
+      this.invalidateState(anychart.enums.Store.SANKEY, anychart.enums.State.APPEARANCE, anychart.Signal.NEEDS_REDRAW);
   }
 };
 
@@ -896,7 +862,7 @@ anychart.sankeyModule.Chart.prototype.setupPalette_ = function(cls, opt_cloneFro
  */
 anychart.sankeyModule.Chart.prototype.paletteInvalidated_ = function(event) {
   if (event.hasSignal(anychart.Signal.NEEDS_REAPPLICATION)) {
-    this.invalidate(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.CHART_LEGEND, anychart.Signal.NEEDS_REDRAW);
+    this.invalidateState(anychart.enums.Store.SANKEY, anychart.enums.State.APPEARANCE, anychart.Signal.NEEDS_REDRAW);
   }
 };
 
@@ -907,33 +873,27 @@ anychart.sankeyModule.Chart.prototype.paletteInvalidated_ = function(event) {
  * @return {Object}
  */
 anychart.sankeyModule.Chart.prototype.getColorResolutionContext = function(tag) {
-  var from, to, node, flow;
-  var type = tag.type;
+  var element = /** @type {anychart.sankeyModule.Chart.Node|anychart.sankeyModule.Chart.Flow} */ (tag.element);
+  var type = tag.element.type;
   var palette = this.palette();
 
   if (type == anychart.sankeyModule.Chart.ElementType.NODE) { // node, conflict
-    node = tag.node;
     return {
-      'id': node.id,
-      'name': node.name,
-      'sourceColor': palette.itemAt(node.id),
-      'conflict': node.conflict
+      'id': element.id,
+      'name': element.name,
+      'sourceColor': palette.itemAt(element.id),
+      'conflict': element.conflict
     };
   } else if (type == anychart.sankeyModule.Chart.ElementType.FLOW) { // flow
-    flow = tag.flow;
-    from = flow.from;
-    to = flow.to;
     return {
-      'from': from.name,
-      'to': to.name,
-      'sourceColor': palette.itemAt(from.id)
+      'from': element.from.name,
+      'to': element.to.name,
+      'sourceColor': palette.itemAt(element.from.id)
     };
   } else { // dropoff
-    flow = tag.flow;
-    node = flow.from;
     return {
-      'from': node.name,
-      'sourceColor': palette.itemAt(node.id)
+      'from': element.from.name,
+      'sourceColor': palette.itemAt(element.from.id)
     };
   }
 };
@@ -969,6 +929,17 @@ anychart.sankeyModule.Chart.ElementType = {
   NODE: 0,
   FLOW: 1,
   DROPOFF: 2
+};
+
+
+/**
+ * Element type string representation.
+ * @enum {string}
+ */
+anychart.sankeyModule.Chart.ElementTypeString = {
+  0: 'node',
+  1: 'flow',
+  2: 'dropoff'
 };
 
 
@@ -1166,6 +1137,20 @@ anychart.sankeyModule.Chart.prototype.interpolateNumber = function(a, b) {
 };
 
 
+/**
+ * Apply normal appearance for path elements.
+ * @param {Array.<acgraph.vector.Path>} arr Array of path elements
+ * @param {anychart.sankeyModule.elements.VisualElement} source
+ */
+anychart.sankeyModule.Chart.prototype.applyAppearance = function(arr, source) {
+  var i, path;
+  for (i = 0; i < arr.length; i++) {
+    path = /** @type {acgraph.vector.Path} */ (arr[i]);
+    this.setFillStroke(source, /** @type {Object} */ (path.tag), path, anychart.PointState.NORMAL);
+  }
+};
+
+
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
   if (this.isConsistent())
@@ -1278,8 +1263,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       this.nodePaths.push(path);
 
       path.tag = {
-        type: anychart.sankeyModule.Chart.ElementType.NODE,
-        node: node
+        element: node
       };
       node.path = path;
       node.x0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x0), 1);
@@ -1305,8 +1289,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         this.flowPaths.push(path);
 
         path.tag = {
-          type: anychart.sankeyModule.Chart.ElementType.FLOW,
-          flow: flow
+          element: flow
         };
 
         flow.path = path;
@@ -1364,8 +1347,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         this.dropoffPaths.push(path);
 
         path.tag = {
-          type: anychart.sankeyModule.Chart.ElementType.DROPOFF,
-          flow: flow
+          element: flow
         };
 
         flow.path = path;
@@ -1563,52 +1545,32 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     }*/
     //endregion
 
-    this.invalidate(anychart.ConsistencyState.APPEARANCE | this.LABELS_STATE);
+    this.invalidateMultiState(anychart.enums.Store.SANKEY, [
+      anychart.enums.State.APPEARANCE,
+      anychart.enums.State.NODE_LABELS,
+      anychart.enums.State.FLOW_LABELS
+    ]);
     this.markConsistent(anychart.ConsistencyState.BOUNDS);
   }
 
-  if (this.hasInvalidationState(anychart.ConsistencyState.APPEARANCE)) {
-    var context, fill, stroke;
+  // if (this.hasInvalidationState(anychart.ConsistencyState.APPEARANCE)) {
+  if (this.hasStateInvalidation(anychart.enums.Store.SANKEY, anychart.enums.State.APPEARANCE)) {
+    this.applyAppearance(this.nodePaths, this.node_);
+    this.applyAppearance(this.flowPaths, this.flow_);
+    this.applyAppearance(this.dropoffPaths, this.dropoff_);
 
-    for (i = 0; i < this.nodePaths.length; i++) {
-      path = this.nodePaths[i];
-      context = this.getColorResolutionContext(/** @type {Object} */ (path.tag));
-      fill = this.node_.getFill(0, context);
-      stroke = this.node_.getStroke(0, context);
-      path.fill(fill);
-      path.stroke(stroke);
-    }
-
-    for (i = 0; i < this.flowPaths.length; i++) {
-      path = this.flowPaths[i];
-      context = this.getColorResolutionContext(/** @type {Object} */ (path.tag));
-      fill = this.flow_.getFill(0, context);
-      stroke = this.flow_.getStroke(0, context);
-      path.fill(fill);
-      path.stroke(stroke);
-    }
-
-    for (i = 0; i < this.dropoffPaths.length; i++) {
-      path = this.dropoffPaths[i];
-      context = this.getColorResolutionContext(/** @type {Object} */ (path.tag));
-      fill = this.dropoff_.getFill(0, context);
-      stroke = this.dropoff_.getStroke(0, context);
-      path.fill(fill);
-      path.stroke(stroke);
-    }
-
-    this.markConsistent(anychart.ConsistencyState.APPEARANCE);
+    this.markStateConsistent(anychart.enums.Store.SANKEY, anychart.enums.State.APPEARANCE);
   }
 
   var labelsFormatProvider, labelsPositionProvider, labelIndex;
-  if (this.hasInvalidationState(anychart.ConsistencyState.SANKEY_NODE_LABELS)) {
+  if (this.hasStateInvalidation(anychart.enums.Store.SANKEY, anychart.enums.State.NODE_LABELS)) {
     var labels = this.node_.labels();
     labels.clear().container(this.rootLayer).zIndex(3);
 
     for (var name in this.nodes) {
       node = /** @type {anychart.sankeyModule.Chart.Node} */ (this.nodes[name]);
       labelIndex = node.id;
-      labelsFormatProvider = this.createLabelContextProvider(node, anychart.sankeyModule.Chart.ElementType.NODE);
+      labelsFormatProvider = this.createLabelContextProvider(node);
       labelsPositionProvider = {
         'value': {
           'x': (node.x0 + node.x1) / 2,
@@ -1622,10 +1584,10 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     labels.draw();
 
     this.node_.markLabelsConsistent();
-    this.markConsistent(anychart.ConsistencyState.SANKEY_NODE_LABELS);
+    this.markStateConsistent(anychart.enums.Store.SANKEY, anychart.enums.State.NODE_LABELS);
   }
 
-  if (this.hasInvalidationState(anychart.ConsistencyState.SANKEY_FLOW_LABELS)) {
+  if (this.hasStateInvalidation(anychart.enums.Store.SANKEY, anychart.enums.State.FLOW_LABELS)) {
     var flowLabels = this.flow_.labels();
     var dropoffLabels = this.dropoff_.labels();
 
@@ -1638,9 +1600,8 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       labelIndex = anychart.utils.toNumber(dataIndex);
       fromNode = flow.from;
       toNode = flow.to;
-      var type = toNode ? anychart.sankeyModule.Chart.ElementType.FLOW : anychart.sankeyModule.Chart.ElementType.DROPOFF;
 
-      labelsFormatProvider = this.createLabelContextProvider(flow, type, true);
+      labelsFormatProvider = this.createLabelContextProvider(flow, true);
       if (toNode) {
         labelsPositionProvider = {
           'value': this.unhoverNodeFlowsPositionProvider(flow)
@@ -1665,18 +1626,18 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
     this.flow_.markLabelsConsistent();
     this.dropoff_.markLabelsConsistent();
-    this.markConsistent(anychart.ConsistencyState.SANKEY_FLOW_LABELS);
+    this.markStateConsistent(anychart.enums.Store.SANKEY, anychart.enums.State.FLOW_LABELS);
   }
 };
 
 
 /**
- * Check if the passed element is node
+ * Check if the passed element is node.
  * @param {anychart.sankeyModule.elements.VisualElement} element
  * @return {boolean}
  */
 anychart.sankeyModule.Chart.prototype.isNode = function(element) {
-  return anychart.utils.instanceOf(element, anychart.sankeyModule.elements.Node);
+  return (element.getType() == anychart.sankeyModule.Chart.ElementType.NODE);
 };
 
 
@@ -1790,7 +1751,7 @@ anychart.sankeyModule.Chart.prototype.setupByJSON = function(config, opt_default
 
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.disposeInternal = function() {
-  goog.disposeAll(this.palette_, this.dropoff_, this.flow_, this.node_, this.tooltip_);
+  goog.disposeAll(this.palette_, this.dropoff_, this.flow_, this.node_, this.tooltip_, this.dropoffPaths, this.nodePaths, this.flowPaths);
   anychart.sankeyModule.Chart.base(this, 'disposeInternal');
 };
 
