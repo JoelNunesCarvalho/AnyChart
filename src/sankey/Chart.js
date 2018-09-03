@@ -1085,6 +1085,7 @@ anychart.sankeyModule.Chart.prototype.resolveCollisions = function(bounds) {
     var nodes = level.nodes;
     var node;
     var y = bounds.top;
+    var bottomY = y + bounds.height;
     var dy;
     var n = nodes.length;
     var i;
@@ -1103,7 +1104,7 @@ anychart.sankeyModule.Chart.prototype.resolveCollisions = function(bounds) {
     }
 
     // If the bottommost node goes outside the bounds, push it back up.
-    dy = y - nodePadding - bounds.height;
+    dy = y - nodePadding - bottomY;
     if (dy > 0) {
       node.y0 = node.y0 - dy;
       node.y1 = node.y1 - dy;
@@ -1200,7 +1201,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       level = this.levels[i];
       nodes = level.nodes;
       lastNodeDropOffPadding = nodes[nodes.length - 1].dropoffValue ? dropOffPadding : 0;
-      aspect = (bounds.height - bounds.top - lastNodeDropOffPadding - nodePadding * (nodes.length - 1)) / level.weight;
+      aspect = (bounds.height - lastNodeDropOffPadding - nodePadding * (nodes.length - 1)) / level.weight;
       weightAspects.push(aspect);
     }
     this.weightAspect = Math.min.apply(null, weightAspects);
@@ -1210,9 +1211,9 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
       nodes = level.nodes;
       for (j = 0; j < nodes.length; j++) {
         node = nodes[j];
-        node.x0 = node.level * levelWidth + emptyLevelSpace / 2;
+        node.x0 = bounds.left + node.level * levelWidth + emptyLevelSpace / 2;
         node.x1 = node.x0 + nodeWidth;
-        node.y0 = j;
+        node.y0 = bounds.top + j;
         node.y1 = node.y0 + node.weight * this.weightAspect;
       }
     }
