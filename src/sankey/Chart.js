@@ -741,7 +741,7 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
  * @private
  */
 anychart.sankeyModule.Chart.prototype.elementInvalidated_ = function(event) {
-  var states = [anychart.ConsistencyState.APPEARANCE];
+  var states = [anychart.enums.State.APPEARANCE];
   if (event.hasSignal(anychart.Signal.NEEDS_REDRAW_LABELS)) {
     var nodeLabels = this.isNode(/** @type {anychart.sankeyModule.elements.VisualElement} */ (event.target));
     states.push(nodeLabels ? anychart.enums.State.NODE_LABELS : anychart.enums.State.FLOW_LABELS);
@@ -1554,7 +1554,6 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
     this.markConsistent(anychart.ConsistencyState.BOUNDS);
   }
 
-  // if (this.hasInvalidationState(anychart.ConsistencyState.APPEARANCE)) {
   if (this.hasStateInvalidation(anychart.enums.Store.SANKEY, anychart.enums.State.APPEARANCE)) {
     this.applyAppearance(this.nodePaths, this.node_);
     this.applyAppearance(this.flowPaths, this.flow_);
