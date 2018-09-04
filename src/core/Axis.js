@@ -817,7 +817,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
       if (isLabels) {
         var i, j, len;
         for (i = 0, len = ticksArrLen; i < len; i++) {
-          this.getLabel(i, true, scaleTicksArr, opt_bounds)
+          this.getLabel(i, true, scaleTicksArr, opt_bounds);
         }
       }
 
@@ -830,7 +830,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
 
         if (isMinorLabels) {
           for (i = 0, len = minorTicksArrLen; i < len; i++) {
-            this.getLabel(i, false, scaleMinorTicksArr, opt_bounds)
+            this.getLabel(i, false, scaleMinorTicksArr, opt_bounds);
           }
         }
       }
@@ -1055,7 +1055,7 @@ anychart.core.Axis.prototype.applyStaggerMode_ = function(opt_bounds) {
     var j, k, bounds1, bounds2, bounds3, states;
 
     for (var i = 0, len = ticksArrLen; i < len; i++) {
-      this.getLabel(i, true, scaleTicksArr, opt_bounds)
+      this.getLabel(i, true, scaleTicksArr, opt_bounds);
     }
 
     var labelsPosition = /** @type {anychart.enums.SidePosition} */(labels.getOption('position'));
@@ -1198,6 +1198,14 @@ anychart.core.Axis.prototype.calcLabels_ = function(opt_bounds) {
 };
 
 
+/**
+ * Returns label.
+ * @param {number} index
+ * @param {boolean} isMajor
+ * @param {Array.<number>} ticksArray
+ * @param {anychart.math.Rect=} opt_parentBounds
+ * @return {*}
+ */
 anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt_parentBounds) {
   if (!isMajor && this.scale() && !(anychart.utils.instanceOf(this.scale(), anychart.scales.ScatterBase)))
     return null;

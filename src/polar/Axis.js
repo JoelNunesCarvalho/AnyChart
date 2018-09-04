@@ -9,6 +9,7 @@ goog.require('anychart.core.VisualBase');
 goog.require('anychart.core.reporting');
 goog.require('anychart.core.ui.LabelsFactory');
 goog.require('anychart.core.utils.Bounds');
+goog.require('anychart.core.utils.Padding');
 goog.require('anychart.enums');
 goog.require('anychart.format.Context');
 goog.require('anychart.math.Rect');

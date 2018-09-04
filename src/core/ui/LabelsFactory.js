@@ -4,6 +4,7 @@ goog.provide('anychart.core.ui.LabelsFactory.Label');
 goog.provide('anychart.standalones.LabelsFactory');
 goog.provide('anychart.standalones.LabelsFactory.Label');
 goog.require('acgraph.math');
+goog.require('acgraph.vector.Text');
 goog.require('anychart.core.IStandaloneBackend');
 goog.require('anychart.core.VisualBase');
 goog.require('anychart.core.reporting');
@@ -781,6 +782,9 @@ anychart.core.ui.LabelsFactory.prototype.draw = function() {
 };
 
 
+/**
+ * First drawing.
+ */
 anychart.core.ui.LabelsFactory.prototype.firstDraw = function() {
   goog.array.forEach(this.labels_, function(label, index) {
     label.firstDraw();
@@ -788,6 +792,9 @@ anychart.core.ui.LabelsFactory.prototype.firstDraw = function() {
 };
 
 
+/**
+ * Measure labels.
+ */
 anychart.core.ui.LabelsFactory.prototype.measureLabels = function() {
   goog.array.forEach(this.labels_, function(label, index) {
     if (label && label.textElement && !label.isComplexText()) {
@@ -1228,7 +1235,7 @@ anychart.core.ui.LabelsFactory.Label = function() {
   this.layer_;
 
   /**
-   * @type {acgraph.vector.Text}
+   * @type {acgraph.vector.Text|anychart.core.ui.Text}
    * @protected
    */
   this.textElement;
@@ -2332,6 +2339,10 @@ anychart.core.ui.LabelsFactory.Label.prototype.applyTextSettings = function(text
 };
 
 
+/**
+ * Whether is complex text. The complex text has
+ * @return {boolean}
+ */
 anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
   if (goog.isBoolean(this.isComplex))
     return this.isComplex;
@@ -2352,6 +2363,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.isComplexText = function() {
 };
 
 
+/**
+ * @return {boolean}
+ */
 anychart.core.ui.LabelsFactory.Label.prototype.needChangeDomElement = function() {
   var isComplex = this.isComplexText();
   var isSimpleDom = anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text);
@@ -2361,6 +2375,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.needChangeDomElement = function()
 };
 
 
+/**
+ * First drawing.
+ */
 anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
   if (this.hasInvalidationState(anychart.ConsistencyState.APPEARANCE)) {
     this.dropMergedSettings();
@@ -2727,7 +2744,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.setComplex = function(value) {
 
 /**
  * Returns the textElement.
- * @return {!acgraph.vector.Text}
+ * @return {!(acgraph.vector.Text|anychart.core.ui.Text)}
  */
 anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
   var isSimpleDom = anychart.utils.instanceOf(this.textElement, anychart.core.ui.Text);
@@ -2752,7 +2769,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.getTextElement = function() {
     }
   }
 
-  return this.textElement;
+  return /** @type {!(acgraph.vector.Text|anychart.core.ui.Text)} */(this.textElement);
 };
 
 

@@ -12,6 +12,7 @@ goog.require('anychart.core.ui.Center');
 goog.require('anychart.core.ui.LabelsFactory');
 goog.require('anychart.core.ui.Tooltip');
 goog.require('anychart.core.utils.InteractivityState');
+goog.require('anychart.core.utils.Padding');
 goog.require('anychart.core.utils.TypedLayer');
 goog.require('anychart.data.Set');
 goog.require('anychart.enums');

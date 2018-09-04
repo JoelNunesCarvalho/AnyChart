@@ -4,6 +4,7 @@ goog.require('anychart.color');
 goog.require('anychart.colorScalesModule');
 goog.require('anychart.core.series.Cartesian');
 goog.require('anychart.core.settings');
+goog.require('anychart.core.utils.Padding');
 goog.require('anychart.enums');
 goog.require('anychart.format.Context');
 goog.require('anychart.heatmapModule.Drawer');
