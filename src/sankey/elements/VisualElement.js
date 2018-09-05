@@ -249,6 +249,7 @@ anychart.sankeyModule.elements.VisualElement.prototype.disposeInternal = functio
 //exports
 (function() {
   var proto = anychart.sankeyModule.elements.VisualElement.prototype;
+  proto['tooltip'] = proto.tooltip;
   // state settings
   proto['normal'] = proto.normal;
   proto['hovered'] = proto.hovered;
