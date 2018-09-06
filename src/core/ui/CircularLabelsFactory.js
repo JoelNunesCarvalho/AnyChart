@@ -324,6 +324,9 @@ anychart.core.ui.CircularLabelsFactory.Label.prototype.getRotation = function(an
 
 /** @inheritDoc */
 anychart.core.ui.CircularLabelsFactory.Label.prototype.drawLabel = function(bounds, parentBounds) {
+  if (!this.mergedSettings)
+    this.getMergedSettings();
+
   var positionFormatter = this.mergedSettings['positionFormatter'];
   var isTextByPath = !!this.textElement.path();
   var anchor = isTextByPath ?

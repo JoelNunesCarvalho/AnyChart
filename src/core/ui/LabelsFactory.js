@@ -2512,9 +2512,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     }
 
     //define parent bounds
-    var parentWidth, parentHeight;
+    var parentWidth, parentHeight, parentBounds;
     this.finalParentBounds = /** @type {anychart.math.Rect} */(this.iterateDrawingPlans(function(state, settings) {
-      var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) || anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label) ?
+      parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) || anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label) ?
         settings.parentBounds() :
         settings.parentBounds;
 
@@ -2591,7 +2591,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
         autoWidth = true;
       }
 
-      if (goog.isDef(textWidth)) this.textElement.width(textWidth); this.dropMergedSettings();
+      if (goog.isDef(textWidth)) this.textElement.width(textWidth);
 
       if (isHeightSet) {
         height = Math.ceil(anychart.utils.normalizeSize(/** @type {number|string} */(mergedSettings['height']), parentHeight));
