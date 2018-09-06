@@ -2235,6 +2235,8 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   bounds.left = position.x;
   bounds.top = position.y;
 
+  console.log(parentHeight);
+
   // if (!this.anchPoint)
   //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
   // this.anchPoint.center({x: position.x, y: position.y});
@@ -2242,7 +2244,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   // if (!this.labelBounds)
   //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
   // this.labelBounds.setBounds(new anychart.math.rect(this.bounds_.left, this.bounds_.top, this.bounds_.width, this.bounds_.height));
-
+  //
   if (this.isComplexText()) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
   } else {
@@ -2410,7 +2412,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
  */
 anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
   var factory = this.factory_;
-  var mergedSettings, isBackgroundEnabled;
+  var mergedSettings, isBackgroundEnabled, isComplex;
 
   if (!this.layer_) this.layer_ = acgraph.layer();
   this.layer_.tag = this.index_;
@@ -2434,14 +2436,29 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
 
   if (this.checkInvalidationState(anychart.ConsistencyState.CONTAINER)) {
     if (enabled) {
+
       if ((!this.factory_.enabled() || (goog.isDef(this.enabled()) && !this.enabled())) && this.factory_.getDomElement()) {
         if (!this.container()) this.container(factory.getDomElement());
         if (!this.container().parent()) {
           this.container().parent(/** @type {acgraph.vector.ILayer} */(factory.container()));
         }
       }
-      if (this.container())
-        this.layer_.parent(/** @type {acgraph.vector.ILayer} */(this.container()));
+
+      if (this.container()) {
+        isComplex = this.isComplexText();
+        if (!isComplex) {
+          if (!this.simpleTextLayer) {
+            this.simpleTextLayer = acgraph.unmanagedLayer();
+            this.simpleTextLayer.zIndex(1);
+          }
+          this.simpleTextLayer.parent(this.layer_);
+          // hack
+          this.simpleTextLayer.content(null);
+          this.simpleTextLayer.content(this.textElement.getDomElement());
+        } else {
+          this.layer_.parent(/** @type {acgraph.vector.ILayer} */(this.container()));
+        }
+      }
     }
     this.markConsistent(anychart.ConsistencyState.CONTAINER);
   }
@@ -2461,7 +2478,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     this.updateComplexSettings();
     this.dropMergedSettings();
 
-    var isComplex = this.isComplexText();
+    isComplex = this.isComplexText();
     mergedSettings = this.getMergedSettings();
 
     //define is width and height set from settings
@@ -2512,18 +2529,19 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     }
 
     //define parent bounds
-    var parentWidth, parentHeight, parentBounds;
+    var parentWidth, parentHeight;
     this.finalParentBounds = /** @type {anychart.math.Rect} */(this.iterateDrawingPlans(function(state, settings) {
-      parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) || anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label) ?
+      var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) ?
         settings.parentBounds() :
-        settings.parentBounds;
-
+        !anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label) ?
+          settings.parentBounds : null;
       if (parentBounds) {
         return parentBounds;
       }
     }, true));
 
     if (!this.finalParentBounds) {
+      var parentBounds = this.parentBounds();
       if ((factory.container() || parentBounds) && isComplex) {
         this.finalParentBounds = parentBounds ? parentBounds : factory.container().getBounds();
       } else {

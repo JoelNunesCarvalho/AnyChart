@@ -666,6 +666,7 @@ anychart.core.Axis.prototype.drawFirstLabel = function(opt_value) {
   if (goog.isDef(opt_value)) {
     if (this.drawFirstLabel_ != opt_value) {
       this.drawFirstLabel_ = opt_value;
+      this.dropBoundsCache();
       this.dropStaggeredLabelsCache_();
       this.invalidate(this.ALL_VISUAL_STATES, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED);
     }
@@ -684,6 +685,7 @@ anychart.core.Axis.prototype.drawLastLabel = function(opt_value) {
   if (goog.isDef(opt_value)) {
     if (this.drawLastLabel_ != opt_value) {
       this.drawLastLabel_ = opt_value;
+      this.dropBoundsCache();
       this.dropStaggeredLabelsCache_();
       this.invalidate(this.ALL_VISUAL_STATES, anychart.Signal.NEEDS_REDRAW | anychart.Signal.BOUNDS_CHANGED);
     }
@@ -1268,7 +1270,7 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
     label.setComplex(null);
 
     label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
-    
+
     label.firstDraw();
   }
 
@@ -1355,8 +1357,15 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
     labelBounds = labels.measure(label, undefined, undefined, index);
   } else {
     var textEl = label.getTextElement();
-    textEl.dropBounds();
-    textEl.setPosition(0, 0);
+
+    if (textEl.bounds) {
+      var measurementNode = acgraph.getRenderer().createMeasurement();
+      textEl.renderTo(measurementNode);
+      label.invalidate(anychart.ConsistencyState.CONTAINER);
+      textEl.dropBounds();
+      textEl.setPosition(0, 0);
+    }
+
     labelBounds = textEl.getBounds();
 
     var padding = label.getFinalSettings('padding');
