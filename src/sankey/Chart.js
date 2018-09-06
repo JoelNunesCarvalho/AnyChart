@@ -1710,6 +1710,21 @@ anychart.sankeyModule.Chart.prototype.drawLabel_ = function(source, element, sta
 
 
 //endregion
+//region CSV
+/** @inheritDoc */
+anychart.sankeyModule.Chart.prototype.getDataHolders = function() {
+  return /** @type {Array.<{data: function():anychart.data.IDataSource}>} */([this]);
+};
+
+
+/** @inheritDoc */
+anychart.sankeyModule.Chart.prototype.toCsv = function(opt_chartDataExportMode, opt_csvSettings) {
+  var result = this.getRawCsvData();
+  return anychart.utils.serializeCsv(result.headers, result.data, opt_csvSettings);
+};
+
+
+//endregion
 //region Serialize / Setup / Dispose
 /** @inheritDoc */
 anychart.sankeyModule.Chart.prototype.serialize = function() {
