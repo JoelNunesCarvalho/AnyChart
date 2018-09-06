@@ -2179,6 +2179,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.clear = function() {
  * @param {anychart.math.Rect} parentBounds Parent bounds.
  */
 anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, parentBounds) {
+  if (!this.mergedSettings)
+    this.getMergedSettings();
+
   var positionFormatter = this.mergedSettings['positionFormatter'];
   var isTextByPath = this.isComplex && this.textElement.path();
   var anchor = isTextByPath ?
