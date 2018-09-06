@@ -1326,6 +1326,7 @@ anychart.stockModule.Plot.prototype.yAxis = function(opt_indexOrValue, opt_value
     axis = new anychart.core.Axis();
     this.yAxes_[index] = axis;
     axis.setup(this.defaultYAxisSettings_);
+    if (!axis.scale()) axis.scale(/** @type {anychart.scales.ScatterBase} */(this.yScale()));
     axis.setParentEventTarget(this);
     axis.listenSignals(this.yAxisInvalidated_, this);
     this.invalidate(anychart.ConsistencyState.STOCK_PLOT_AXES | anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW);
@@ -1388,6 +1389,7 @@ anychart.stockModule.Plot.prototype.xAxis = function(opt_value) {
   if (!this.xAxis_) {
     this.xAxis_ = new anychart.stockModule.Axis(this.chart_);
     this.xAxis_.setParentEventTarget(this);
+    if (!this.xAxis_.scale()) this.xAxis_.scale(/** @type {anychart.stockModule.scales.Scatter} */(this.chart_.xScale()));
     this.xAxis_.setupSpecial(true, false);
     this.xAxis_.zIndex(anychart.stockModule.Plot.ZINDEX_AXIS);
     this.xAxis_.listenSignals(this.xAxisInvalidated_, this);
@@ -1874,7 +1876,6 @@ anychart.stockModule.Plot.prototype.draw = function() {
       axis = this.yAxes_[i];
       if (axis) {
         axis.suspendSignalsDispatching();
-        if (!axis.scale()) axis.scale(/** @type {anychart.scales.ScatterBase} */(this.yScale()));
         axis.labels().dropCallsCache();
         axis.minorLabels().dropCallsCache();
         axis.container(this.rootLayer_);
@@ -1888,7 +1889,6 @@ anychart.stockModule.Plot.prototype.draw = function() {
   if (this.hasInvalidationState(anychart.ConsistencyState.STOCK_PLOT_DT_AXIS)) {
     if (this.xAxis_) {
       this.xAxis_.suspendSignalsDispatching();
-      this.xAxis_.scale(/** @type {anychart.stockModule.scales.Scatter} */(this.chart_.xScale()));
       this.xAxis_.container(this.rootLayer_);
       this.xAxis_.draw();
       this.xAxis_.resumeSignalsDispatching(false);
@@ -2143,6 +2143,7 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
       this.invalidate(anychart.ConsistencyState.STOCK_PLOT_DT_AXIS);
     }
 
+    var a = goog.object.clone(seriesBounds);
     var leftPadding = 0;
     var rightPadding = 0;
     for (i = 0; i < this.yAxes_.length; i++) {
@@ -2153,6 +2154,7 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
         if (axis.orientation() == anychart.enums.Orientation.LEFT) {
           if (!legend.getOption('enabled') || !goog.string.startsWith(legend.getOption('position'), 'left')) {
             axis.parentBounds(/** @type {number} */(seriesBounds.left - width - leftPadding), seriesBounds.top, 0, seriesBounds.height);
+            //console.log(seriesBounds.left - width - leftPadding, seriesBounds.top, 0, seriesBounds.height);
             leftPadding += width;
           } else {
             axis.parentBounds(seriesBounds);
@@ -2170,7 +2172,7 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
         axis.resumeSignalsDispatching(false);
       }
     }
-
+    seriesBounds = a;
     if (this.xAxis_ && this.xAxis_.enabled()) {
       this.xAxis_.suspendSignalsDispatching();
       // we need this to tell xAxis about new width by Y axes
