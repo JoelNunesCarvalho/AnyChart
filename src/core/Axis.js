@@ -817,7 +817,9 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
       if (isLabels) {
         var i, j, len;
         for (i = 0, len = ticksArrLen; i < len; i++) {
-          this.getLabel(i, true, scaleTicksArr, opt_bounds);
+          if ((i == 0 && this.drawFirstLabel()) || (i == ticksArrLen - 1 && this.drawLastLabel()) || (i > 0 && i < ticksArrLen - 1)) {
+            this.getLabel(i, true, scaleTicksArr, opt_bounds);
+          }
         }
       }
 
@@ -1266,18 +1268,7 @@ anychart.core.Axis.prototype.getLabel = function(index, isMajor, ticksArray, opt
     label.setComplex(null);
 
     label.stateOrder([label.ownSettings, labels.ownSettings, labels.themeSettings]);
-
-    // var textEl = label.textElement;
-    // if (!label.textElement) {
-    //   textEl = label.getTextElement();
-    //   var measurementNode = acgraph.getRenderer().createMeasurement();
-    //   textEl.renderTo(measurementNode);
-    // }
-    // var mergedSettings = label.getMergedSettings();
-    // var text = labels.callFormat(mergedSettings['format'], formatProvider, index);
-    // textEl.text(goog.isDef(text) ? String(text) : '');
-    // label.applyTextSettings(textEl, true, mergedSettings);
-
+    
     label.firstDraw();
   }
 
@@ -1444,28 +1435,6 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
  * Drop bounds cache.
  */
 anychart.core.Axis.prototype.dropBoundsCache = function() {
-  var labels = /** @type {anychart.core.ui.LabelsFactory} */(this.labels());
-  var scale = /** @type {anychart.scales.ScatterBase|anychart.scales.Ordinal} */(this.scale());
-
-  var isLabels = labels.enabled();
-  if (isLabels &&scale) {
-    var scaleTicksArr = scale.ticks().get();
-    var ticksArrLen = scaleTicksArr.length;
-
-    if (isLabels) {
-      for (var i = 0, len = ticksArrLen; i < len; i++) {
-        var label = labels.getLabel(i);
-        if (label) {
-          var textEl = label.getTextElement();
-          if (!label.isComplexText() && textEl) {
-            textEl.dropBounds();
-            textEl.setPosition(0, 0);
-          }
-        }
-      }
-    }
-  }
-
   if (this.labelsBoundingRects_) this.labelsBoundingRects_.length = 0;
   this.labelsBounds_.length = 0;
   this.minorLabelsBounds_.length = 0;

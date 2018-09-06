@@ -1297,10 +1297,6 @@ anychart.core.ui.LabelsFactory.Label = function() {
 
   this.markConsistent(anychart.ConsistencyState.LABELS_FACTORY_CACHE);
 
-  var beforeInvalidationHook = goog.bind(function () {
-    this.dropMergedSettings();
-  }, this);
-
   anychart.core.settings.createTextPropertiesDescriptorsMeta(this.descriptorsMeta,
       anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS,
       anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS,
@@ -2382,7 +2378,9 @@ anychart.core.ui.LabelsFactory.Label.prototype.firstDraw = function() {
   if (this.hasInvalidationState(anychart.ConsistencyState.APPEARANCE)) {
     this.dropMergedSettings();
   }
-  if (!this.isComplexText()) {
+  var enabled = this.getFinalSettings('enabled');
+
+  if (!this.isComplexText() && enabled) {
     var textElement = this.textElement;
 
     if (this.needChangeDomElement() || (this.layer_ && !this.layer_.parent())) {
@@ -2457,11 +2455,10 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
   }
 
   if (this.checkInvalidationState(anychart.ConsistencyState.APPEARANCE | anychart.ConsistencyState.BOUNDS)) {
-    var isComplex = this.isComplexText();
-
     this.updateComplexSettings();
     this.dropMergedSettings();
 
+    var isComplex = this.isComplexText();
     mergedSettings = this.getMergedSettings();
 
     //define is width and height set from settings
@@ -2501,7 +2498,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     this.getTextElement();
 
     if (!isComplex) {
-      if ( !this.simpleTextLayer) {
+      if (!this.simpleTextLayer) {
         this.simpleTextLayer = acgraph.unmanagedLayer();
         this.simpleTextLayer.zIndex(1);
       }
@@ -2514,14 +2511,18 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
     //define parent bounds
     var parentWidth, parentHeight;
     this.finalParentBounds = /** @type {anychart.math.Rect} */(this.iterateDrawingPlans(function(state, settings) {
-      var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) ? settings.parentBounds() : settings.parentBounds;
-      if (parentBounds)
+      var parentBounds = anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory) || anychart.utils.instanceOf(settings, anychart.core.ui.LabelsFactory.Label) ?
+        settings.parentBounds() :
+        settings.parentBounds;
+
+      if (parentBounds) {
         return parentBounds;
+      }
     }, true));
 
     if (!this.finalParentBounds) {
-      if ((factory.container()) && isComplex) {
-        this.finalParentBounds = factory.container().getBounds();
+      if ((factory.container() || parentBounds) && isComplex) {
+        this.finalParentBounds = parentBounds ? parentBounds : factory.container().getBounds();
       } else {
         this.finalParentBounds = anychart.math.rect(0, 0, 0, 0);
       }
@@ -2587,7 +2588,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.draw = function() {
         autoWidth = true;
       }
 
-      if (goog.isDef(textWidth)) this.textElement.width(textWidth);
+      if (goog.isDef(textWidth)) this.textElement.width(textWidth); this.dropMergedSettings();
 
       if (isHeightSet) {
         height = Math.ceil(anychart.utils.normalizeSize(/** @type {number|string} */(mergedSettings['height']), parentHeight));
