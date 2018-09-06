@@ -1220,7 +1220,7 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
 
     for (var dataIndex in this.flows) {
       flow = this.flows[dataIndex];
-      flow.height = flow.weight * this.weightAspect;
+      flow.height = Math.max(flow.weight * this.weightAspect, 1);
     }
 
     this.resolveCollisions(bounds);
