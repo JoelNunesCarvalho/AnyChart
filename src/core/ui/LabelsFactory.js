@@ -2235,8 +2235,6 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   bounds.left = position.x;
   bounds.top = position.y;
 
-  console.log(parentHeight);
-
   // if (!this.anchPoint)
   //   this.anchPoint = this.container().circle(position.x, position.y, 2).fill('red').stroke('black').zIndex(1000);
   // this.anchPoint.center({x: position.x, y: position.y});
@@ -2244,7 +2242,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawLabel = function(bounds, pare
   // if (!this.labelBounds)
   //   this.labelBounds = this.container().rect().fill('none').stroke('red').zIndex(1000);
   // this.labelBounds.setBounds(new anychart.math.rect(this.bounds_.left, this.bounds_.top, this.bounds_.width, this.bounds_.height));
-  //
+
   if (this.isComplexText()) {
     this.textElement.x(/** @type {number} */(this.textX + position.x)).y(/** @type {number} */(this.textY + position.y));
   } else {
