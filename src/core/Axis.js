@@ -1398,24 +1398,33 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
   if (isComplexLabel) {
     coordBox = labelBounds.toCoordinateBox();
   } else {
-    var anchor = (this.themeSettings['labels'] && this.themeSettings['labels']['anchor']) || anychart.enums.Anchor.CENTER;
-    var anchorCoordinate = anychart.utils.getCoordinateByAnchor(new anychart.math.Rect(0, 0, labelBounds.width, labelBounds.height), anchor);
+    var mergedSettings = label.getMergedSettings();
 
-    // var ___name = 'lbl_a' + index;
-    // if (!this[___name])
-    //   this[___name] = stage.circle(anchorCoordinate.x, anchorCoordinate.y, 2)
-    //     .fill('none').stroke('green').zIndex(1000);
-    // this[___name].center({x: anchorCoordinate.x, y: anchorCoordinate.y});
+    var anchor = mergedSettings['anchor'] || anychart.enums.Anchor.LEFT_TOP;
+
+    var anchorCoordinate = anychart.utils.getCoordinateByAnchor(new anychart.math.Rect(0, 0, labelBounds.width, labelBounds.height), anchor);
 
     labelBounds.left -= anchorCoordinate.x;
     labelBounds.top -= anchorCoordinate.y;
 
-    // var ___name = 'lbl_b' + index;
-    // if (!this[___name]) this[___name] = stage.rect().fill('none').stroke('red').zIndex(1000);
-    // this[___name].setBounds(labelBounds);
+    anchorCoordinate = anychart.utils.getCoordinateByAnchor(labelBounds, anchor);
+
+    var parentBounds = this.parentBounds();
+    var offsetX = mergedSettings['offsetX'];
+    var offsetY = mergedSettings['offsetY'];
+
+    var offsetXNormalized = goog.isDef(offsetX) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetX), parentBounds.width) : 0;
+    var offsetYNormalized = goog.isDef(offsetY) ? anychart.utils.normalizeSize(/** @type {number|string} */(offsetY), parentBounds.height) : 0;
+
+    var position = new goog.math.Coordinate(labelBounds.left, labelBounds.top);
+
+    anychart.utils.applyOffsetByAnchor(position, anchor, offsetXNormalized, offsetYNormalized);
+
+    labelBounds.left = position.x;
+    labelBounds.top = position.y;
 
     coordBox = labelBounds.toCoordinateBox();
-    var mergedSettings = label.getMergedSettings();
+
     if (mergedSettings['rotation']) {
       var tx = goog.math.AffineTransform.getRotateInstance(goog.math.toRadians(/** @type {number} */(mergedSettings['rotation'])),
           anchorCoordinate.x, anchorCoordinate.y);
@@ -1423,16 +1432,28 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
       tx.transform(coordBox, 0, coordBox, 0, 4);
     }
 
-    // var ___name = 'lbl' + index;
-    // if (!this[___name]) this[___name] = stage.path()
-    //     .fill('none').stroke('green').zIndex(1000);
-    // this[___name].clear()
-    //     .moveTo(coordBox[0], coordBox[1])
-    //     .lineTo(coordBox[2], coordBox[3])
-    //     .lineTo(coordBox[4], coordBox[5])
-    //     .lineTo(coordBox[6], coordBox[7])
-    //     .lineTo(coordBox[0], coordBox[1]);
+    //  debug purpose
+    // var ___name = 'lbl_a' + index + ' ' + isMajor;
+    // if (!this[___name])
+    //   this[___name] = stage.circle(anchorCoordinate.x, anchorCoordinate.y, 2)
+    //     .fill('none').stroke('red').zIndex(1000);
+    // this[___name].center({x: anchorCoordinate.x, y: anchorCoordinate.y});
+    //
+    // var ___name = 'lbl_b' + index + ' ' + isMajor;
+    // if (!this[___name]) this[___name] = stage.rect().fill('none').stroke('red').zIndex(1000);
+    // this[___name].setBounds(labelBounds);
+    //
   }
+
+  // var ___name = 'lbl' + index + ' ' + isMajor;
+  // if (!this[___name]) this[___name] = stage.path()
+  //   .fill('none').stroke('green').zIndex(1000);
+  // this[___name].clear()
+  //   .moveTo(coordBox[0], coordBox[1])
+  //   .lineTo(coordBox[2], coordBox[3])
+  //   .lineTo(coordBox[4], coordBox[5])
+  //   .lineTo(coordBox[6], coordBox[7])
+  //   .lineTo(coordBox[0], coordBox[1]);
 
   return boundsCache[index] = coordBox;
 };
