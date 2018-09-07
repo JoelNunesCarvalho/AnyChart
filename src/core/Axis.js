@@ -21,6 +21,7 @@ goog.require('anychart.scales.Linear');
 goog.require('anychart.scales.Ordinal');
 goog.require('anychart.scales.ScatterBase');
 goog.require('anychart.utils');
+goog.require('goog.math.Coordinate');
 //endregion
 
 
@@ -1407,7 +1408,7 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
     labelBounds.left -= anchorCoordinate.x;
     labelBounds.top -= anchorCoordinate.y;
 
-    anchorCoordinate = anychart.utils.getCoordinateByAnchor(labelBounds, anchor);
+    anchorCoordinate = anychart.utils.getCoordinateByAnchor(/** @type {anychart.math.Rect} */(labelBounds), anchor);
 
     var parentBounds = this.parentBounds();
     var offsetX = mergedSettings['offsetX'];
