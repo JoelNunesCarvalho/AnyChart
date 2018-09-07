@@ -867,7 +867,7 @@ anychart.core.Axis.prototype.getOverlappedLabels_ = function(opt_bounds) {
         var tickVal, ratio, bounds1, bounds2, bounds3, bounds4;
         var tempRatio;
         var k = -1;
-        var labelsPosition = anychart.enums.SidePosition.OUTSIDE;
+        var labelsPosition = /** @type {anychart.enums.SidePosition} */(labels.getOption('position'));
         var insideLabelSpace = this.insideBounds_ && anychart.utils.sidePositionToNumber(labelsPosition) < 0 ?
             this.insideBounds_ : null;
         var isLabelInInsideSpace;
