@@ -315,7 +315,7 @@ anychart.mekkoModule.Chart.prototype.createLegendItemsProvider = function(source
 anychart.mekkoModule.Chart.prototype.setYAxisScale = function(axis) {
   if (this.useCategoryScale_) {
     var straight = !this.xScale().inverted();
-    var straightFirst = axis.orientation() == anychart.enums.Orientation.LEFT || axis.orientation() == anychart.enums.Orientation.BOTTOM;
+    var straightFirst = axis.getOption('orientation') == anychart.enums.Orientation.LEFT || axis.getOption('orientation') == anychart.enums.Orientation.BOTTOM;
     axis.scale(/** @type {anychart.scales.Base} */(straightFirst == straight ? this.firstCategoriesScale() : this.lastCategoriesScale()));
   } else {
     axis.scale(/** @type {anychart.scales.Base} */(this.yScale()));
@@ -524,8 +524,8 @@ anychart.mekkoModule.Chart.prototype.serializeWithScales = function(json, scales
 /** @inheritDoc */
 anychart.mekkoModule.Chart.prototype.serializeAxis = function(item, scales, scaleIds, axesIds) {
   var config = item.serialize();
-  if ((item.scale() == this.firstCategoriesScale() && item.orientation() != anychart.enums.Orientation.LEFT) ||
-      (item.scale() == this.lastCategoriesScale() && item.orientation() != anychart.enums.Orientation.RIGHT))
+  if ((item.scale() == this.firstCategoriesScale() && item.getOption('orientation') != anychart.enums.Orientation.LEFT) ||
+      (item.scale() == this.lastCategoriesScale() && item.getOption('orientation') != anychart.enums.Orientation.RIGHT))
     this.serializeScale(config, 'scale', /** @type {anychart.scales.Base} */(item.scale()), scales, scaleIds);
   axesIds.push(goog.getUid(item));
   return config;
