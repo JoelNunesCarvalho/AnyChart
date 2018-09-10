@@ -1343,11 +1343,7 @@ anychart.core.Axis.prototype.getLabelBounds_ = function(index, isMajor, ticksArr
 
   var positionProvider = {'value': {'x': x, 'y': y}};
 
-  var label = labels.getLabel(index);
-  if (!label) {
-    label = this.getLabel(index, isMajor, ticksArray, opt_parentBounds);
-  }
-
+  var label = this.getLabel(index, isMajor, ticksArray, opt_parentBounds);
   label.positionProvider(positionProvider);
 
   var labelBounds;
@@ -2536,7 +2532,6 @@ anychart.core.Axis.prototype.setupByJSON = function(config, opt_default) {
   if ('title' in config)
     this.title(config['title']);
 
-  this.themeSettings['labels'] = config['labels'];
   this.labels().setupInternal(!!opt_default, config['labels']);
   this.minorLabels().setupInternal(!!opt_default, config['minorLabels']);
   this.ticks(config['ticks']);

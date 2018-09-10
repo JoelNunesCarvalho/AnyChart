@@ -2271,8 +2271,7 @@ anychart.core.ui.LabelsFactory.Label.prototype.drawConnector = function() {
     }
     this.connector.stroke(this.mergedSettings['connectorStroke']);
     var formattedConnectorPosition = goog.object.clone(positionFormatter.call(connectorPoint, connectorPoint));
-    var position = new goog.math.Coordinate(formattedPosition['x'], formattedPosition['y']);
-    this.connector.moveTo(position.x, position.y).lineTo(formattedConnectorPosition['x'], formattedConnectorPosition['y']);
+    this.connector.moveTo(formattedPosition['x'], formattedPosition['y']).lineTo(formattedConnectorPosition['x'], formattedConnectorPosition['y']);
   }
 };
 

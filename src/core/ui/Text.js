@@ -85,12 +85,12 @@ anychart.core.ui.Text.prototype.renderTo = function(element) {
 anychart.core.ui.Text.prototype.setPosition = function(x, y) {
   var dom = this.getDomElement();
 
-  if (x != this.x_ && goog.isDef(x)) {
+  if (goog.isDef(x) && x != this.x_) {
     this.x_ = x;
     dom.setAttribute('x', this.x_);
   }
 
-  if (y != this.y_ && goog.isDef(y)) {
+  if (goog.isDef(y) && y != this.y_) {
     this.y_ = y;
     dom.setAttribute('y', this.y_ + this.baseLine);
   }
