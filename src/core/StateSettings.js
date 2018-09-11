@@ -772,52 +772,60 @@ anychart.core.StateSettings.prototype.setupByJSON = function(config, opt_default
   anychart.core.settings.deserialize(this, this.PROPERTY_DESCRIPTORS, config, opt_default);
 
   if (goog.isDef(this.descriptorsMeta['labels'])) {
-    this.setEnabledTrue(config['labels']);
-    this.labels().setupInternal(!!opt_default, config['labels']);
+    var labelsConfig = this.labels().themeSettings;
+    this.setEnabledTrue(labelsConfig);
+    this.labels().setupInternal(!!opt_default, labelsConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['minLabels'])) {
-    this.setEnabledTrue(config['minLabels']);
-    this.minLabels().setupInternal(!!opt_default, config['minLabels']);
+    var minLabelsConfig = this.minLabels().themeSettings;
+    this.setEnabledTrue(minLabelsConfig);
+    this.minLabels().setupInternal(!!opt_default, minLabelsConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['maxLabels'])) {
-    this.setEnabledTrue(config['maxLabels']);
-    this.maxLabels().setupInternal(!!opt_default, config['maxLabels']);
+    var maxLabelsConfig = this.maxLabels().themeSettings;
+    this.setEnabledTrue(maxLabelsConfig);
+    this.maxLabels().setupInternal(!!opt_default, maxLabelsConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['headers'])) {
-    this.setEnabledTrue(config['headers']);
-    this.headers().setup(config['headers']);
+    var headersConfig = this.headers().themeSettings;
+    this.setEnabledTrue(headersConfig);
+    this.headers().setup(headersConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['lowerLabels'])) {
-    this.setEnabledTrue(config['lowerLabels']);
-    this.lowerLabels().setupInternal(!!opt_default, config['lowerLabels']);
+    var lowerLabelsConfig = this.lowerLabels().themeSettings;
+    this.setEnabledTrue(lowerLabelsConfig);
+    this.lowerLabels().setupInternal(!!opt_default, lowerLabelsConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['upperLabels'])) {
-    this.setEnabledTrue(config['upperLabels']);
-    this.upperLabels().setupInternal(!!opt_default, config['upperLabels']);
+    var upperLabelsConfig = this.upperLabels().themeSettings;
+    this.setEnabledTrue(upperLabelsConfig);
+    this.upperLabels().setupInternal(!!opt_default, upperLabelsConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['markers'])) {
-    this.setEnabledTrue(config['markers']);
-    this.markers().setupInternal(!!opt_default, config['markers']);
+    var markersConfig = this.markers().themeSettings;
+    this.setEnabledTrue(markersConfig);
+    this.markers().setupInternal(!!opt_default, markersConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['outlierMarkers'])) {
-    this.setEnabledTrue(config['outlierMarkers']);
-    this.outlierMarkers().setupInternal(!!opt_default, config['outlierMarkers']);
+    var outlierMarkersConfig = this.outlierMarkers().themeSettings;
+    this.setEnabledTrue(outlierMarkersConfig);
+    this.outlierMarkers().setupInternal(!!opt_default, outlierMarkersConfig);
   }
 
   if (goog.isDef(this.descriptorsMeta['connector'])) {
-    this.connector().setupInternal(!!opt_default, config['connector']);
+    this.connector().setupInternal(!!opt_default, this.connector().themeSettings);
   }
 
   if (goog.isDef(this.descriptorsMeta['outline'])) {
     // this.setEnabledTrue(config['outline']);
-    this.outline().setupInternal(!!opt_default, config['outline']);
+    this.outline().setupInternal(!!opt_default, this.outline().themeSettings);
   }
 
   if (goog.isDef(this.descriptorsMeta['background'])) {
