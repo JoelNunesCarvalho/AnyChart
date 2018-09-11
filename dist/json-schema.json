@@ -1468,7 +1468,7 @@
       "type": "object",
       "required": ["type"],
       "allOf": [
-        {"$ref": "#/definitions/anychart.core.SeparateChart"}
+        {"$ref": "#/definitions/anychart.core.Chart"}
       ],
       "properties": {
         "type": {"enum": ["sankey"]},
