@@ -163,7 +163,7 @@ anychart.core.ChartWithAxes.prototype.isVertical = function(opt_value) {
       for (i = axes.length; i--;) {
         var axis = axes[i];
         if (axis) {
-          switch (axis.getOption('orientation')) {
+          switch (axis.orientation()) {
             case anychart.enums.Orientation.BOTTOM:
               newValue = anychart.enums.Orientation.LEFT;
               break;
@@ -538,6 +538,7 @@ anychart.core.ChartWithAxes.prototype.calculateGridsThickness = function() {
     var grid = /** @type {anychart.core.GridBase} */(grids[i]);
     if (grid && grid.enabled()) {
       var thickness = acgraph.vector.getThickness(/** @type {acgraph.vector.Stroke} */(grid.getOption('stroke')));
+
       if (grid.isHorizontal()) {
         if (thickness > maxHorizontalThickness) {
           maxHorizontalThickness = thickness;
@@ -584,8 +585,7 @@ anychart.core.ChartWithAxes.prototype.xAxis = function(opt_indexOrValue, opt_val
   if (!axis) {
     axis = new anychart.core.Axis();
     axis.setParentEventTarget(this);
-    this.setupCreated('defaultXAxisSettings', axis);
-    //axis.setupInternal(true, this.defaultXAxisSettings());
+    axis.setupInternal(true, this.defaultXAxisSettings());
     this.xAxes_[index] = axis;
     axis.listenSignals(this.onAxisSignal_, this);
     this.invalidate(anychart.ConsistencyState.AXES_CHART_AXES |
@@ -622,9 +622,8 @@ anychart.core.ChartWithAxes.prototype.yAxis = function(opt_indexOrValue, opt_val
   var axis = this.yAxes_[index];
   if (!axis) {
     axis = new anychart.core.Axis();
-    this.setupCreated('defaultYAxisSettings', axis);
     axis.setParentEventTarget(this);
-    //axis.setupInternal(true, this.defaultYAxisSettings());
+    axis.setupInternal(true, this.defaultYAxisSettings());
     this.yAxes_[index] = axis;
     axis.listenSignals(this.onAxisSignal_, this);
     this.invalidate(anychart.ConsistencyState.AXES_CHART_AXES | anychart.ConsistencyState.SCALE_CHART_SCALES_STATISTICS | anychart.ConsistencyState.BOUNDS, anychart.Signal.NEEDS_REDRAW);
@@ -1152,7 +1151,7 @@ anychart.core.ChartWithAxes.prototype.getBoundsWithoutAxes = function(contentAre
   for (i = 0, count = axes.length; i < count; i++) {
     axis = /** @type {anychart.core.Axis} */(axes[i]);
     if (axis && axis.enabled()) {
-      switch (axis.getOption('orientation')) {
+      switch (axis.orientation()) {
         case anychart.enums.Orientation.TOP:
           if (!firstTopAxis)
             firstTopAxis = axis;
@@ -1193,11 +1192,9 @@ anychart.core.ChartWithAxes.prototype.getBoundsWithoutAxes = function(contentAre
       axis = /** @type {anychart.core.Axis} */(axes[i]);
       if (axis && axis.enabled()) {
         axis.parentBounds(contentAreaBounds);
-        orientation = axis.getOption('orientation');
-        var stroke = /**@type {acgraph.vector.Stroke|string}*/(axis.getOption('stroke'));
-        if (!goog.isObject(stroke))
-          stroke = acgraph.vector.normalizeStroke(stroke);
-        axisStrokeThickness = acgraph.vector.getThickness(/** @type {acgraph.vector.Stroke} */(stroke));
+        orientation = axis.orientation();
+        axisStrokeThickness = acgraph.vector.getThickness(/** @type {acgraph.vector.Stroke} */(axis.stroke()));
+
         if (orientation == anychart.enums.Orientation.TOP) {
           axis.padding()['top'](offsets[0]);
           axis.padding()['bottom'](0);
@@ -1261,7 +1258,7 @@ anychart.core.ChartWithAxes.prototype.getBoundsWithoutAxes = function(contentAre
 
         var axisPixelBounds = axis.getPixelBounds(false);
         var side;
-        switch (axis.getOption('orientation')) {
+        switch (axis.orientation()) {
           case anychart.enums.Orientation.TOP:
             side = anychart.enums.Orientation.BOTTOM;
             break;
@@ -1664,8 +1661,8 @@ anychart.core.ChartWithAxes.prototype.setupByJSONWithScales = function(config, s
   if ('isVertical' in config)
     this.isVerticalInternal = !!config['isVertical'];
 
-  // this.defaultXAxisSettings(config['defaultXAxisSettings']);
-  // this.defaultYAxisSettings(config['defaultYAxisSettings']);
+  this.defaultXAxisSettings(config['defaultXAxisSettings']);
+  this.defaultYAxisSettings(config['defaultYAxisSettings']);
   this.defaultGridSettings(config['defaultGridSettings']);
   this.defaultMinorGridSettings(config['defaultMinorGridSettings']);
   this.defaultLineMarkerSettings(config['defaultLineMarkerSettings']);
@@ -1679,22 +1676,14 @@ anychart.core.ChartWithAxes.prototype.setupByJSONWithScales = function(config, s
   this.setupElementsWithScales(config['yGrids'], this.yGrid, scalesInstances);
   this.setupElementsWithScales(config['xMinorGrids'], this.xMinorGrid, scalesInstances);
   this.setupElementsWithScales(config['yMinorGrids'], this.yMinorGrid, scalesInstances);
-  // this.setupElementsWithScales(config['xAxes'], this.xAxis, scalesInstances);
-  // this.setupElementsWithScales(config['yAxes'], this.yAxis, scalesInstances);
+  this.setupElementsWithScales(config['xAxes'], this.xAxis, scalesInstances);
+  this.setupElementsWithScales(config['yAxes'], this.yAxis, scalesInstances);
   this.setupElementsWithScales(config['lineAxesMarkers'], this.lineMarker, scalesInstances);
   this.setupElementsWithScales(config['rangeAxesMarkers'], this.rangeMarker, scalesInstances);
   this.setupElementsWithScales(config['textAxesMarkers'], this.textMarker, scalesInstances);
 
   if ('crosshair' in config)
     this.crosshair().setupInternal(!!opt_default, config['crosshair']);
-};
-
-
-/** Setup xAxes and yAxes */
-anychart.core.ChartWithAxes.prototype.setupAxes = function() {
-  var scalesInstances = /**@type {Object}*/(this.getScaleInstance());
-  this.setupElementsWithScales(this.getThemeOption('xAxes'), this.xAxis, scalesInstances);
-  this.setupElementsWithScales(this.getThemeOption('yAxes'), this.yAxis, scalesInstances);
 };
 
 

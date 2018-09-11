@@ -19,7 +19,6 @@ goog.require('anychart.scatterModule.Chart');
  */
 anychart.scatter = function(var_args) {
   var chart = new anychart.scatterModule.Chart();
-  chart.setupAxes();
   chart.setupStateSettings();
   chart.setupInternal(true, anychart.getFullTheme('scatter'));
 
@@ -42,7 +41,6 @@ anychart.scatter = function(var_args) {
  */
 anychart.marker = function(var_args) {
   var chart = new anychart.scatterModule.Chart();
-  chart.setupAxes();
   chart.setupStateSettings();
   chart.setupInternal(true, anychart.getFullTheme('marker'));
 
@@ -69,7 +67,6 @@ anychart.marker = function(var_args) {
  */
 anychart.bubble = function(var_args) {
   var chart = new anychart.scatterModule.Chart();
-  chart.setupAxes();
   chart.setupStateSettings();
   chart.setupInternal(true, anychart.getFullTheme('bubble'));
 
@@ -89,11 +86,10 @@ anychart.bubble = function(var_args) {
  */
 anychart.quadrant = function(var_args) {
   var chart = new anychart.scatterModule.Chart();
-  chart.setType(anychart.enums.ChartTypes.QUADRANT);
   chart.addThemes('quadrant');
-  chart.setupAxes();
   chart.setupStateSettings();
   chart.setupInternal(true, anychart.getFullTheme('quadrant'));
+  chart.setType(anychart.enums.ChartTypes.QUADRANT);
 
   for (var i = 0, count = arguments.length; i < count; i++) {
     chart['marker'](arguments[i]);

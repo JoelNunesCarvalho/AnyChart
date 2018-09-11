@@ -15,7 +15,6 @@ goog.require('anychart.scales.ScatterBase');
  */
 anychart.scales.DateTime = function() {
   anychart.scales.DateTime.base(this, 'constructor');
-  this.addThemes('defaultScaleSettings.dateTime');
   /**
    * Major ticks for the scale.
    * @type {anychart.scales.DateTimeTicks}
@@ -56,8 +55,6 @@ anychart.scales.DateTime.prototype.getType = function() {
 anychart.scales.DateTime.prototype.ticks = function(opt_value) {
   if (!this.ticksObj) {
     this.ticksObj = new anychart.scales.DateTimeTicks(this);
-    this.setupCreated('ticks', this.ticksObj);
-
     this.registerDisposable(this.ticksObj);
     this.ticksObj.listenSignals(this.ticksInvalidated_, this);
   }
@@ -78,7 +75,6 @@ anychart.scales.DateTime.prototype.ticks = function(opt_value) {
 anychart.scales.DateTime.prototype.minorTicks = function(opt_value) {
   if (!this.minorTicksObj) {
     this.minorTicksObj = new anychart.scales.DateTimeTicks(this);
-    this.setupCreated('minorTicks', this.minorTicksObj);
     this.registerDisposable(this.minorTicksObj);
     this.minorTicksObj.listenSignals(this.ticksInvalidated_, this);
   }
@@ -168,8 +164,9 @@ anychart.scales.DateTime.prototype.setupByJSON = function(config, opt_default) {
  * @return {!anychart.scales.DateTime} DateTime scale.
  */
 anychart.scales.dateTime = function() {
-  // result.setupByJSON(/** @type {!Object} */(anychart.getFullTheme('defaultScaleSettings.dateTime')));
-  return new anychart.scales.DateTime();
+  var result = new anychart.scales.DateTime();
+  result.setupByJSON(/** @type {!Object} */(anychart.getFullTheme('defaultScaleSettings.dateTime')));
+  return result;
 };
 
 

@@ -1312,23 +1312,15 @@ anychart.core.Base.prototype.flattenThemes = function() {
     var theme = this.themes_[i];
     if (goog.isString(theme)) {
       var splitPath = theme.split('.');
-      var part;
 
       for (var t = 0; t < baseThemes.length; t++) {
         theme = baseThemes[t];
         for (var j = 0; j < splitPath.length; j++) {
           if (theme) {
-            part = splitPath[j];
+            var part = splitPath[j];
             theme = theme[part];
           }
         }
-        if (goog.isBoolean(theme)) {
-          theme = {
-            'enabled': theme
-          };
-        } else if (goog.isNumber(theme) && (part == 'padding' || part == 'margin'))
-          theme = anychart.core.utils.Space.normalizeSpace(theme);
-
         if (theme)
           goog.mixin(flatTheme, theme);
       }

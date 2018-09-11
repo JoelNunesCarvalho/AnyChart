@@ -80,7 +80,6 @@ anychart.scales.Ordinal = function() {
   this.ticks_ = null;
 
   anychart.scales.Ordinal.base(this, 'constructor');
-  this.addThemes('defaultScaleSettings.ordinal');
 };
 goog.inherits(anychart.scales.Ordinal, anychart.scales.Base);
 
@@ -105,7 +104,6 @@ anychart.scales.Ordinal.prototype.isMissing = function(value) {
 anychart.scales.Ordinal.prototype.ticks = function(opt_value) {
   if (!this.ticks_) {
     this.ticks_ = new anychart.scales.OrdinalTicks(this);
-    this.setupCreated('ticks', this.ticks_);
     this.registerDisposable(this.ticks_);
     this.ticks_.listenSignals(this.ticksInvalidated_, this);
   }
@@ -552,8 +550,9 @@ anychart.scales.Ordinal.prototype.setupByJSON = function(config, opt_default) {
  * @return {!anychart.scales.Ordinal} Ordinal scale.
  */
 anychart.scales.ordinal = function() {
-  // result.setupByJSON(/** @type {!Object} */(anychart.getFullTheme('defaultScaleSettings.ordinal')));
-  return new anychart.scales.Ordinal();
+  var result = new anychart.scales.Ordinal();
+  result.setupByJSON(/** @type {!Object} */(anychart.getFullTheme('defaultScaleSettings.ordinal')));
+  return result;
 };
 
 

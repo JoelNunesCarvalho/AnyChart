@@ -319,7 +319,7 @@ anychart.core.axisMarkers.TextBase.prototype.layout = function(opt_value) {
   } else if (this.layout_) {
     return this.layout_;
   } else if (this.axis_) {
-    var axisOrientation = this.axis_.getOption('orientation');
+    var axisOrientation = this.axis_.orientation();
     var isHorizontal = (axisOrientation == anychart.enums.Orientation.LEFT || axisOrientation == anychart.enums.Orientation.RIGHT);
     return isHorizontal ? anychart.enums.Layout.HORIZONTAL : anychart.enums.Layout.VERTICAL;
   } else {
