@@ -387,7 +387,7 @@ goog.addDependency('../../../../src/resource/resourcelist/Item.js', ['anychart.r
 goog.addDependency('../../../../src/resource/resourcelist/Settings.js', ['anychart.resourceModule.resourceList.Settings'], ['anychart.core.Base', 'anychart.core.utils.Margin'], {});
 goog.addDependency('../../../../src/resource/resourcelist/TagsSettings.js', ['anychart.resourceModule.resourceList.TagsSettings'], ['anychart.core.ui.Background', 'anychart.core.utils.Padding', 'anychart.resourceModule.resourceList.TextSettings'], {});
 goog.addDependency('../../../../src/resource/resourcelist/TextSettings.js', ['anychart.resourceModule.resourceList.TextSettings'], ['anychart.core.settings', 'anychart.resourceModule.resourceList.Settings'], {});
-goog.addDependency('../../../../src/sankey/Chart.js', ['anychart.sankeyModule.Chart'], ['anychart.consistency', 'anychart.core.Chart', 'anychart.core.StateSettings', 'anychart.data.Set', 'anychart.format.Context', 'anychart.sankeyModule.elements.VisualElement'], {});
+goog.addDependency('../../../../src/sankey/Chart.js', ['anychart.sankeyModule.Chart'], ['anychart.consistency', 'anychart.core.Chart', 'anychart.core.StateSettings', 'anychart.data.Set', 'anychart.format.Context', 'anychart.sankeyModule.elements.VisualElement', 'goog.array'], {});
 goog.addDependency('../../../../src/sankey/defaultTheme.js', ['anychart.sankeyModule.defaultTheme'], [], {});
 goog.addDependency('../../../../src/sankey/elements/Dropoff.js', ['anychart.sankeyModule.elements.Dropoff'], ['anychart.sankeyModule.elements.VisualElement'], {});
 goog.addDependency('../../../../src/sankey/elements/Flow.js', ['anychart.sankeyModule.elements.Flow'], ['anychart.sankeyModule.elements.VisualElement'], {});

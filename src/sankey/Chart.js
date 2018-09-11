@@ -6,6 +6,7 @@ goog.require('anychart.core.StateSettings');
 goog.require('anychart.data.Set');
 goog.require('anychart.format.Context');
 goog.require('anychart.sankeyModule.elements.VisualElement');
+goog.require('goog.array');
 //endregion
 //region Constructor
 
@@ -1091,7 +1092,7 @@ anychart.sankeyModule.Chart.prototype.relaxRightToLeft = function(alpha) {
 anychart.sankeyModule.Chart.prototype.resolveCollisions = function(bounds) {
   for (var k = 0; k < this.levels.length; k++) {
     var level = this.levels[k];
-    var nodes = level.nodes;
+    var nodes = level.nodes.slice();
     var node;
     var y = bounds.top;
     var bottomY = y + bounds.height;
