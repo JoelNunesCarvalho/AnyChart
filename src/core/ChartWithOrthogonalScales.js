@@ -52,9 +52,6 @@ anychart.core.ChartWithOrthogonalScales = function(categorizeData) {
    */
   this.hasStackedSeries = false;
 
-  this.setOption('barGroupsPadding', 0);
-  this.setOption('barsPadding', 0);
-
   /**
    * Y scales hash map by uid.
    * @type {Object.<string, anychart.scales.Base>}
@@ -2382,7 +2379,7 @@ anychart.core.ChartWithOrthogonalScales.prototype.getScaleInstance = function(op
  */
 anychart.core.ChartWithOrthogonalScales.prototype.setupByJSON = function(config, opt_default) {
   anychart.core.ChartWithOrthogonalScales.base(this, 'setupByJSON', config, opt_default);
-  anychart.core.settings.deserialize(this, anychart.core.ChartWithOrthogonalScales.PROPERTY_DESCRIPTORS, config);
+  anychart.core.settings.deserialize(this, anychart.core.ChartWithOrthogonalScales.PROPERTY_DESCRIPTORS, config, opt_default);
 
   if (config['scales']) {
     this.scalesChanged_ = true;
