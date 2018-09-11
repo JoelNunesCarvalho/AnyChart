@@ -417,7 +417,7 @@ anychart.sankeyModule.Chart.prototype.calculateLevels_ = function() {
   while (iterator.advance()) {
     from = /** @type {string} */ (iterator.get('from'));
     to = /** @type {string} */ (iterator.get('to'));
-    flow = /** @type {number} */ (anychart.utils.toNumber(iterator.get('flow')));
+    flow = /** @type {number} */ (anychart.utils.toNumber(iterator.get('weight')));
     if (this.isMissing_(from, to, flow))
       continue;
 
@@ -1727,9 +1727,8 @@ anychart.sankeyModule.Chart.prototype.getDataHolders = function() {
 
 
 /** @inheritDoc */
-anychart.sankeyModule.Chart.prototype.toCsv = function(opt_chartDataExportMode, opt_csvSettings) {
-  var result = this.getRawCsvData();
-  return anychart.utils.serializeCsv(result.headers, result.data, opt_csvSettings);
+anychart.sankeyModule.Chart.prototype.getCsvColumns = function(dataHolder) {
+  return ['from', 'to', 'weight'];
 };
 
 

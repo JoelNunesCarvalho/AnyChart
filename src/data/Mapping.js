@@ -219,7 +219,7 @@ anychart.data.Mapping.DEFAULT_MAPPING = {
   // sankey diagram
   'from': [0],
   'to': [1],
-  'flow': [2, 'value', 'weight', 'flow']
+  'weight': [2, 'value', 'flow', 'weight']
 };
 
 
