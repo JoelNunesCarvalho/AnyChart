@@ -1228,18 +1228,20 @@ anychart.core.Base.prototype.addThemes = function(var_args) {
  * Reset themes queue and drop themeSettings
  *
  * @param {boolean=} opt_dropDefaultThemes true if need to drow default themes
+ * @return {anychart.core.Base} Self for chaining.
  */
 anychart.core.Base.prototype.dropThemes = function(opt_dropDefaultThemes) {
   this.themes_.length = 0;
   this.themeSettings = {};
   if (opt_dropDefaultThemes)
     this.defaultThemes_.length = 0;
+  return this;
 };
 
 
 /**
  * Add themes and save added theme names as default
- * @param var_args
+ * @param {...(Object|string)|Array.<Object|string>} var_args
  */
 anychart.core.Base.prototype.addDefaultThemes = function(var_args) {
   this.defaultThemes_ = this.addThemes(var_args);

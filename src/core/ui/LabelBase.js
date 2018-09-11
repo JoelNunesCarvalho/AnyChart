@@ -193,7 +193,7 @@ anychart.core.ui.LabelBase.prototype.parent = function(opt_value) {
         this.background().parent(null);
         this.padding().parent(null);
       } else {
-        this.background().parent((/** @type {anychart.core.ui.LabelBase} */ (opt_value)).background());
+        this.background().dropThemes().parent((/** @type {anychart.core.ui.LabelBase} */ (opt_value)).background());
         this.padding().parent((/** @type {anychart.core.ui.LabelBase} */ (opt_value)).padding());
       }
     }

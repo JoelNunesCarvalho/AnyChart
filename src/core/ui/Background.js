@@ -203,10 +203,7 @@ anychart.core.ui.Background.prototype.corners = function(opt_value) {
     }
     return this;
   } else {
-    if ('corners' in this.themeSettings && !goog.isArray(this.themeSettings['corners']))
-      this.themeSettings['corners'] = this.cornersFormatter_(this.themeSettings['corners']);
-
-    return /** @type {Array.<number|string>} */(this.getOption('corners'));
+    return this.cornersFormatter_(/** @type {Array.<number|string>} */(this.getOption('corners')));
   }
 };
 
@@ -398,10 +395,10 @@ anychart.core.ui.Background.prototype.draw = function() {
 
     var bounds = this.getBoundsForDrawing();
 
-    var leftTopCorner = this.getCornerSize_(0);
-    var rightTopCorner = this.getCornerSize_(1);
-    var rightBottomCorner = this.getCornerSize_(2);
-    var leftBottomCorner = this.getCornerSize_(3);
+    var leftTopCorner = this.getCornerSize_(0) || 0;
+    var rightTopCorner = this.getCornerSize_(1) || 0;
+    var rightBottomCorner = this.getCornerSize_(2) || 0;
+    var leftBottomCorner = this.getCornerSize_(3) || 0;
     var points;
 
     var currentPath, sideIndex;

@@ -831,6 +831,7 @@ anychart.core.StateSettings.prototype.setupByJSON = function(config, opt_default
 anychart.core.StateSettings.prototype.dropThemes = function() {
   anychart.core.StateSettings.base(this, 'dropThemes');
   this.resolutionChainCache(null);
+  return this;
 };
 
 

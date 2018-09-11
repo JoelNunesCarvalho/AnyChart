@@ -1848,13 +1848,13 @@ anychart.core.series.Base.prototype.getLegendItemText = function(context) {
 anychart.core.series.Base.prototype.tooltip = function(opt_value) {
   if (!this.tooltipInternal) {
     this.tooltipInternal = new anychart.core.ui.Tooltip(0);
+    this.tooltipInternal.dropThemes();
     if (this.chart.supportsTooltip()) {
       var chart = /** @type {anychart.core.Chart} */ (this.chart);
       var parent = /** @type {anychart.core.ui.Tooltip} */ (chart.tooltip());
       this.tooltipInternal.parent(parent);
       this.tooltipInternal.chart(chart);
-
-      //this.setupCreated('tooltip', this.tooltipInternal);
+      this.setupCreated('tooltip', this.tooltipInternal);
     }
   }
   if (goog.isDef(opt_value)) {

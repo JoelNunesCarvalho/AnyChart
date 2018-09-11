@@ -212,7 +212,7 @@ anychart.core.ui.Crosshair.prototype.setParentForLabels = function(parentLabels,
   var childLabels = isX ? this.getXLabels() : this.getYLabels();
   for (var i = 0; i < parentLabels.length; i++) {
     if (parentLabels[i] && childLabels[i]) { // there is parent label with index i and child label with same index
-      childLabels[i].parent(parentLabels[i]);
+      childLabels[i].dropThemes().parent(parentLabels[i]);
     }
   }
 };
@@ -234,7 +234,7 @@ anychart.core.ui.Crosshair.prototype.propagateParentalRelationship = function(pa
     if (!childLabel) {
       childLabel = isX ? plotCrosshair.xLabel(index) : plotCrosshair.yLabel(index);
     }
-    childLabel.parent(parentOrChildLabel);
+    childLabel.dropThemes().parent(parentOrChildLabel);
   }
 
   // check if we have parent (means that <this> crosshair instance is Plot crosshair)
@@ -244,7 +244,7 @@ anychart.core.ui.Crosshair.prototype.propagateParentalRelationship = function(pa
     if (!parentLabel) {
       parentLabel = /** @type {anychart.core.ui.CrosshairLabel} */ (isX ? this.parent_.xLabel(index) : this.parent_.yLabel(index));
     }
-    parentOrChildLabel.parent(parentLabel);
+    parentOrChildLabel.dropThemes().parent(parentLabel);
   }
 };
 
@@ -855,7 +855,8 @@ anychart.core.ui.Crosshair.prototype.drawLabel_ = function(axis, xDirection, lab
     label.autoAnchor(this.getAnchorByAxis(axis));
     var labelPosition = this.getLabelPosition_(axis, label, side, start, ratio);
     label.x(/** @type {number}*/(labelPosition.x)).y(/** @type {number}*/(labelPosition.y));
-    label.container(/** @type {acgraph.vector.ILayer} */(this.container())).draw();
+    label.container(/** @type {acgraph.vector.ILayer} */(this.container()));
+    label.draw();
   }
 };
 

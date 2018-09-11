@@ -4606,11 +4606,7 @@ anychart.pieModule.Chart.prototype.createTooltip = function() {
   tooltip.chart(this);
   tooltip.containerProvider(this);
   tooltip.listenSignals(this.onTooltipSignal_, this);
-
-  // todo: (chernetsky) Update this when tooltip is refactored
-  tooltip.addThemes('defaultFontSettings', 'defaultTooltip');
   this.setupCreated('tooltip', tooltip);
-
   return tooltip;
 };
 
@@ -4707,19 +4703,6 @@ anychart.pieModule.Chart.prototype.setupByJSON = function(config, opt_default) {
 
   if ('tooltip' in config)
     this.tooltip().setupInternal(!!opt_default, config['tooltip']);
-
-  this.selected_.setupInternal(!!opt_default, config['selected']);
-
-  if (goog.isDef(config['explode'])) {
-    config = goog.object.clone(config);
-    this.selected_.setupInternal(!!opt_default, {'explode': config['explode']});
-    delete config['explode'];
-  }
-
-  this.normal_.setupInternal(!!opt_default, config);
-  this.normal_.setupInternal(!!opt_default, config['normal']);
-
-  this.hovered_.setupInternal(!!opt_default, config['hovered']);
 };
 
 

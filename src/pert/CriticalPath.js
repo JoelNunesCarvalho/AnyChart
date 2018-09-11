@@ -14,6 +14,8 @@ goog.require('anychart.pertModule.Tasks');
 anychart.pertModule.CriticalPath = function() {
   anychart.pertModule.CriticalPath.base(this, 'constructor');
 
+  this.addThemes('criticalPath');
+
   /**
    * @type {anychart.pertModule.Milestones}
    * @private
@@ -48,6 +50,7 @@ anychart.pertModule.CriticalPath.prototype.SUPPORTED_SIGNALS =
 anychart.pertModule.CriticalPath.prototype.milestones = function(opt_value) {
   if (!this.milestones_) {
     this.milestones_ = new anychart.pertModule.Milestones();
+    this.setupCreated('milestones', this.milestones_);
   }
 
   if (goog.isDef(opt_value)) {
@@ -66,6 +69,7 @@ anychart.pertModule.CriticalPath.prototype.milestones = function(opt_value) {
 anychart.pertModule.CriticalPath.prototype.tasks = function(opt_value) {
   if (!this.tasks_) {
     this.tasks_ = new anychart.pertModule.Tasks();
+    this.setupCreated('tasks', this.tasks_);
   }
 
   if (goog.isDef(opt_value)) {

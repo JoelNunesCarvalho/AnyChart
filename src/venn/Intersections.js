@@ -174,7 +174,7 @@ anychart.vennModule.Intersections.prototype.tooltip = function(opt_value) {
   if (!this.tooltip_) {
     this.tooltip_ = new anychart.core.ui.Tooltip(0);
     var parent = /** @type {anychart.core.ui.Tooltip} */ (this.chart_.tooltip());
-    this.tooltip_.parent(parent);
+    this.tooltip_.dropThemes().parent(parent);
     this.tooltip_.chart(this.chart_);
   }
   if (goog.isDef(opt_value)) {

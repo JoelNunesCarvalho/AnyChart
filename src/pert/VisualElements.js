@@ -183,6 +183,7 @@ anychart.pertModule.VisualElements.prototype.parent = function(opt_value) {
         if (this.parent_)
           this.parent_.unlistenSignals(this.parentInvalidated_, this);
         this.parent_ = opt_value;
+        this.tooltip().dropThemes().parent(this.parent_.tooltip());
         this.parent_.listenSignals(this.parentInvalidated_, this);
       }
     }
@@ -335,7 +336,7 @@ anychart.pertModule.VisualElements.prototype.labelsInvalidated = function(event)
 anychart.pertModule.VisualElements.prototype.tooltip = function(opt_value) {
   if (!this.tooltip_) {
     this.tooltip_ = new anychart.core.ui.Tooltip(0);
-    this.registerDisposable(this.tooltip_);
+    this.setupCreated('tooltip', this.tooltip_);
     this.tooltip_.listenSignals(this.onTooltipSignal_, this);
   }
   if (goog.isDef(opt_value)) {
@@ -471,6 +472,13 @@ anychart.pertModule.VisualElements.prototype.setupByJSON = function(config, opt_
 
   if ('tooltip' in config)
     this.tooltip().setupInternal(!!opt_default, config['tooltip']);
+};
+
+
+/** @inheritDoc */
+anychart.pertModule.VisualElements.prototype.disposeInternal = function() {
+  goog.disposeAll(this.tooltip_);
+  anychart.pertModule.VisualElements.base(this, 'disposeInternal');
 };
 
 (function() {

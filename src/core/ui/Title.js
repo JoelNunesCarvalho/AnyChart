@@ -397,7 +397,7 @@ anychart.core.ui.Title.prototype.parent = function(opt_value) {
       this.parent_ = opt_value;
       if (this.parent_) {
         this.parent_.listenSignals(this.parentInvalidated_, this);
-        this.background().parent(this.parent_.background());
+        this.background().dropThemes().parent(this.parent_.background());
         this.padding().parent(this.parent_.padding());
         this.margin().parent(this.parent_.margin());
       } else {
