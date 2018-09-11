@@ -49,6 +49,9 @@ anychart.core.ChartWithOrthogonalScales = function(categorizeData) {
    */
   this.hasStackedSeries = false;
 
+  this.setOption('barGroupsPadding', 0);
+  this.setOption('barsPadding', 0);
+
   /**
    * Y scales hash map by uid.
    * @type {Object.<string, anychart.scales.Base>}
