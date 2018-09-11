@@ -1277,10 +1277,10 @@ anychart.sankeyModule.Chart.prototype.drawContent = function(bounds) {
         element: node
       };
       node.path = path;
-      node.x0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x0), 1);
-      node.y0 = anychart.utils.applyPixelShift(/** @type {number} */ (node.y0), 1);
-      node.x1 = anychart.utils.applyPixelShift(/** @type {number} */ (node.x1), 1);
-      node.y1 = anychart.utils.applyPixelShift(/** @type {number} */ (node.y1), 1);
+      node.x0 = anychart.utils.applyPixelShift(/** @type {number} */ (anychart.math.round(node.x0, 4)), 1);
+      node.y0 = anychart.utils.applyPixelShift(/** @type {number} */ (anychart.math.round(node.y0, 4)), 1);
+      node.x1 = anychart.utils.applyPixelShift(/** @type {number} */ (anychart.math.round(node.x1, 4)), 1);
+      node.y1 = anychart.utils.applyPixelShift(/** @type {number} */ (anychart.math.round(node.y1, 4)), 1);
 
       path
           .moveTo(node.x0, node.y0)
