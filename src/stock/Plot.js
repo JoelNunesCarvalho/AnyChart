@@ -2146,8 +2146,8 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
     var leftPadding = 0;
     var rightPadding = 0;
     var legendNotEnabled = !legend.getOption('enabled');
-    var leftSide = goog.string.startsWith(legend.getOption('position'), 'left');
-    var rightSide = goog.string.startsWith(legend.getOption('position'), 'right');
+    var leftSide = legend.getOption('position') == 'left';
+    var rightSide = legend.getOption('position') == 'right';
     for (i = 0; i < this.yAxes_.length; i++) {
       var axis = this.yAxes_[i];
       if (axis) {
@@ -2173,6 +2173,9 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
         }
         axis.resumeSignalsDispatching(false);
       }
+    }
+    if (seriesBounds.width < 0) {
+      seriesBounds.width = 0;
     }
 
     if (this.xAxis_ && this.xAxis_.enabled()) {
