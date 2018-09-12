@@ -2143,36 +2143,38 @@ anychart.stockModule.Plot.prototype.ensureBoundsDistributed_ = function() {
       this.invalidate(anychart.ConsistencyState.STOCK_PLOT_DT_AXIS);
     }
 
-    var a = goog.object.clone(seriesBounds);
     var leftPadding = 0;
     var rightPadding = 0;
+    var legendNotEnabled = !legend.getOption('enabled');
+    var leftSide = goog.string.startsWith(legend.getOption('position'), 'left');
+    var rightSide = goog.string.startsWith(legend.getOption('position'), 'right');
     for (i = 0; i < this.yAxes_.length; i++) {
       var axis = this.yAxes_[i];
       if (axis) {
         axis.suspendSignalsDispatching();
         var width = axis.width();
         if (axis.orientation() == anychart.enums.Orientation.LEFT) {
-          if (!legend.getOption('enabled') || !goog.string.startsWith(legend.getOption('position'), 'left')) {
+          if (legendNotEnabled || !leftSide) {
             axis.parentBounds(/** @type {number} */(seriesBounds.left - width - leftPadding), seriesBounds.top, 0, seriesBounds.height);
-            //console.log(seriesBounds.left - width - leftPadding, seriesBounds.top, 0, seriesBounds.height);
             leftPadding += width;
           } else {
             axis.parentBounds(seriesBounds);
             seriesBounds = axis.getRemainingBounds();
           }
         } else if (axis.orientation() == anychart.enums.Orientation.RIGHT) {
-          if (!legend.getOption('enabled') || !goog.string.startsWith(legend.getOption('position'), 'right')) {
+          if (legendNotEnabled || !rightSide) {
             rightPadding += width;
             axis.parentBounds(seriesBounds.left, seriesBounds.top, /** @type {number} */(seriesBounds.width + rightPadding), seriesBounds.height);
           } else {
             axis.parentBounds(seriesBounds);
             seriesBounds = axis.getRemainingBounds();
           }
+
         }
         axis.resumeSignalsDispatching(false);
       }
     }
-    seriesBounds = a;
+
     if (this.xAxis_ && this.xAxis_.enabled()) {
       this.xAxis_.suspendSignalsDispatching();
       // we need this to tell xAxis about new width by Y axes
