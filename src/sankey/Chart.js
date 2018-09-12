@@ -751,7 +751,10 @@ anychart.sankeyModule.Chart.prototype.handleMouseOut = function(event) {
  * @private
  */
 anychart.sankeyModule.Chart.prototype.elementInvalidated_ = function(event) {
-  var states = [anychart.enums.State.APPEARANCE];
+  var states = [];
+  if (event.hasSignal(anychart.Signal.NEEDS_REDRAW_APPEARANCE)) {
+    states.push(anychart.enums.State.APPEARANCE);
+  }
   if (event.hasSignal(anychart.Signal.NEEDS_REDRAW_LABELS)) {
     var nodeLabels = this.isNode(/** @type {anychart.sankeyModule.elements.VisualElement} */ (event.target));
     states.push(nodeLabels ? anychart.enums.State.NODE_LABELS : anychart.enums.State.FLOW_LABELS);
