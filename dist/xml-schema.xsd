@@ -257,9 +257,9 @@
         <!-- chart.Sunburst elements -->
         <xsd:attribute name="calculation_mode" type="enums.CalculationMode" default="ordinal-from-root"/>
         <!-- chart.Sankey attributes -->
-        <xsd:attribute name="nodeWidth" type="simple.NumberOrPercent" />
-        <xsd:attribute name="nodePadding" type="xsd:double" />
-        <xsd:attribute name="curveFactor" type="simple.Ratio" />
+        <xsd:attribute name="node_width" type="simple.NumberOrPercent" />
+        <xsd:attribute name="node_padding" type="xsd:double" />
+        <xsd:attribute name="curve_factor" type="simple.Ratio" />
     </xsd:complexType>
 
     <xsd:complexType name="Gauge">
@@ -3332,6 +3332,7 @@
             <xsd:enumeration value="hilo"/>
             <xsd:enumeration value="waterfall"/>
             <xsd:enumeration value="sunburst"/>
+            <xsd:enumeration value="sankey"/>
         </xsd:restriction>
     </xsd:simpleType>
 
